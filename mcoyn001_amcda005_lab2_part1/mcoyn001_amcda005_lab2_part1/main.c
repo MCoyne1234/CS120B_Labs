@@ -10,12 +10,17 @@
 #include <avr/io.h>
 
 int main(void)
-{
-	DDRB = 0xFF; // Configure port B's 8 pins as outputs
+{ 
+	DDRA = 0x00; // Configure port B's 8 pins as outputs
+	DDRB = 0xFF; 
 	PORTB = 0x00; // Initialize PORTB output to 0’s
-	while(1)
-	{
-		PORTB = 0x0F; // Writes port B's 8 pins with 00001111
+	//PORTA = 0x00;
+	// 0000 0001	 = 0x01
+	while(1){
+	//check if garage door is open
+		if( PORTA0 == 0x01 && PORTA1 == 0x00) {
+			PORTB= 0x01;
+		}
 	}
 }
 

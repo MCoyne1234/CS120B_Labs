@@ -17,13 +17,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   6 .debug_abbrev 0000077f  00000000  00000000  000009ae  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   00000221  00000000  00000000  0000112d  2**0
+  7 .debug_line   00000216  00000000  00000000  0000112d  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000024  00000000  00000000  00001350  2**2
+  8 .debug_frame  00000024  00000000  00000000  00001344  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    00000410  00000000  00000000  00001374  2**0
+  9 .debug_str    0000040a  00000000  00000000  00001368  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_ranges 00000010  00000000  00000000  00001784  2**0
+ 10 .debug_ranges 00000010  00000000  00000000  00001772  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -118,18 +118,16 @@ Disassembly of section .text:
 #include <avr/io.h>
 
 int main(void)
-{
-	DDRB = 0xFF; // Configure port B's 8 pins as outputs
-  9e:	8f ef       	ldi	r24, 0xFF	; 255
-  a0:	84 b9       	out	0x04, r24	; 4
-	PORTB = 0x00; // Initialize PORTB output to 0’s
-  a2:	15 b8       	out	0x05, r1	; 5
-	while(1)
-	{
-		PORTB = 0x0F; // Writes port B's 8 pins with 00001111
-  a4:	8f e0       	ldi	r24, 0x0F	; 15
+{ 
+	DDRA = 0x00; // Configure port B's 8 pins as outputs
+  9e:	11 b8       	out	0x01, r1	; 1
+	DDRB = 0xFF; 
+  a0:	8f ef       	ldi	r24, 0xFF	; 255
+  a2:	84 b9       	out	0x04, r24	; 4
+	PORTB = 0x01; // Initialize PORTB output to 0’s
+  a4:	81 e0       	ldi	r24, 0x01	; 1
   a6:	85 b9       	out	0x05, r24	; 5
-  a8:	fe cf       	rjmp	.-4      	; 0xa6 <main+0x8>
+  a8:	ff cf       	rjmp	.-2      	; 0xa8 <main+0xa>
 
 000000aa <_exit>:
   aa:	f8 94       	cli
