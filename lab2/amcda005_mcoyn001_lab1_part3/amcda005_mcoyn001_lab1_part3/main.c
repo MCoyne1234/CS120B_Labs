@@ -27,9 +27,10 @@ int main(void)
 	unsigned char counter = 0x00; 
 	unsigned char lot_full = 0x80;
 	unsigned char mask = 0x8F; // mask to change only the lower nibble AND bit 7 when lot is full
-	
+	unsigned char tmpC = 0x00;	
 	while(1)
 	{
+		tmpC = PORTC;
 		counter = cntavail;
 		if( (PINA & 0x01) == 0x01){
 			counter -= 1; 
@@ -46,9 +47,9 @@ int main(void)
 		
 		//value = (value & ~mask) | (newvalue & mask);
 		if(counter == 0){
-			PORTC =  (PORTC & ~mask) | (lot_full & mask); // Lot is full, clear lower nibble and set PORTC7 to '1'
+			PORTC =  (tmpC & ~mask) | (lot_full & mask); // Lot is full, clear lower nibble and set PORTC7 to '1'
 		}else{
-			PORTC =  (PORTC & ~mask ) | (counter & mask); // Write value to lower nibble of PORTC and set PORTC7 to '0'
+			PORTC =  (tmpC & ~mask ) | (counter & mask); // Write value to lower nibble of PORTC and set PORTC7 to '0'
 		}
 	}
 }
