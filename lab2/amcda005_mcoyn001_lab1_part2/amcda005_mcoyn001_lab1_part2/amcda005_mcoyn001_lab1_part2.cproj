@@ -12,22 +12,23 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>mcoyn001_acmda005_lab2_part2</AssemblyName>
-    <Name>mcoyn001_acmda005_lab2_part2</Name>
-    <RootNamespace>mcoyn001_acmda005_lab2_part2</RootNamespace>
+    <AssemblyName>amcda005_mcoyn001_lab1_part2</AssemblyName>
+    <Name>amcda005_mcoyn001_lab1_part2</Name>
+    <RootNamespace>amcda005_mcoyn001_lab1_part2</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
     <CacheFlash>true</CacheFlash>
     <ProgFlashFromRam>true</ProgFlashFromRam>
-    <RamSnippetAddress />
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
     <UncachedRange />
     <preserveEEPROM>true</preserveEEPROM>
-    <OverrideVtorValue />
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
     <BootSegment>2</BootSegment>
     <ResetRule>0</ResetRule>
     <eraseonlaunchrule>0</eraseonlaunchrule>
     <EraseKey />
+<<<<<<< HEAD:mcoyn001_acmda005_lab2_part2/mcoyn001_acmda005_lab2_part2/mcoyn001_acmda005_lab2_part2.cproj
     <AsfFrameworkConfig>
       <framework-data xmlns="">
   <options />
@@ -40,6 +41,21 @@
   </dependencies>
 </framework-data>
     </AsfFrameworkConfig>
+=======
+    <avrtool>com.atmel.avrdbg.tool.simulator</avrtool>
+    <avrtoolserialnumber />
+    <avrdeviceexpectedsignature>0x1E9706</avrdeviceexpectedsignature>
+    <com_atmel_avrdbg_tool_simulator>
+      <ToolOptions xmlns="">
+        <InterfaceProperties>
+        </InterfaceProperties>
+      </ToolOptions>
+      <ToolType xmlns="">com.atmel.avrdbg.tool.simulator</ToolType>
+      <ToolNumber xmlns="">
+      </ToolNumber>
+      <ToolName xmlns="">Simulator</ToolName>
+    </com_atmel_avrdbg_tool_simulator>
+>>>>>>> 36939902bb7cce5520ade8523833627356fbf4ad:lab2/amcda005_mcoyn001_lab1_part2/amcda005_mcoyn001_lab1_part2/amcda005_mcoyn001_lab1_part2.cproj
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
