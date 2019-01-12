@@ -11,10 +11,10 @@
 
 int main(void)
 { 
-	DDRA = 0x00; // Configure port B's 8 pins as outputs
+	DDRA = 0x00; // Configure port A's 8 pins as inputs
 	DDRB = 0xFF; 
-	//PORTA = 0x00; // Initialize PORTA output to 0s
-	//PORTB = 0x00; // Initialize PORTB output to 0s
+	PORTA = 0x00; // Initialize PORTA output to 0s
+	PORTB = 0x00; // Initialize PORTB output to 0s
 
 	while(1){
 		//check if garage door is open and no light detected.

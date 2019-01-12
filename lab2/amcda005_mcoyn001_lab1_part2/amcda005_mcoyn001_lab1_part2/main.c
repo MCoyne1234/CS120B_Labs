@@ -15,10 +15,10 @@ int main(void)
 	//4 spaces
 	unsigned char cntavail;	//spaces available counter
 	
-	DDRA = 0xF0;    // Configure PORTA's pins as outputs
+	DDRA = 0x00;    // Configure PORTA's pins as outputs
 	PORTA = 0x00;   // Initialize PORTA to 0’s
 	
-	DDRC == 0xFF; 
+	DDRC = 0xFF; 
 	PORTC = 0xFF;   // init
 	
 	cntavail = 4;   //start off with 4 empty spaces, 

@@ -18,7 +18,7 @@ int main(void)
 	
 	DDRA = 0x00;    // Configure PORTA's pins as inputs
 	PORTA = 0x00;   // Initialize PORTA 0s
-	DDRC == 0xFF; 
+	DDRC = 0xFF; 	// Configure PORTC's pins as inputs
 	PORTC = 0x74;   // Set PORTC7 to '0', PORTC[4-6] to '1' (to test only lower nibble affected), PORTC[0-3] to 0100  
 	cntavail = 4;   // Start off with 4 empty spaces, 
 	
