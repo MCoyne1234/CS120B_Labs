@@ -9,15 +9,23 @@
 
 #include <avr/io.h>
 
-
 int main(void)
-{
-	DDRA = 0x00;
-	DDRB = 0xFF;
-	DDRC = 0xFF;
-    /* Replace with your application code */
-    while (1) 
+{	
+	DDRA = 0x00; PORTA = 0x00; // init A to input.
+	DDRB = 0xFF; PORTB = 0x00; // init B to output.
+	DDRC = 0xFF; PORTC = 0x00; // init C to output.
+	
+	unsigned char tmpA = 0x00;
+	
+    while(1)
     {
+		 tmpA = PINA;
+			PORTB = (tmpA >> 4);
+			PORTC = (tmpA << 4 );
     }
+	
+	return 0;
 }
+
+
 
