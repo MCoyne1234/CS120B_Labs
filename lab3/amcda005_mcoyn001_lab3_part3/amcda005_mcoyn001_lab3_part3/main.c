@@ -24,41 +24,41 @@ int main(void)
 		tmpC = PORTC;
 		
 		if((tmpA & (16 + 32 + 64)) == (16 + 32 + 64) ){
-			PORTC = PORTC & 0x7F;
+			tmpC = tmpC & 0x7F;
 		}
 		else if((tmpA & (16 + 32 )) == (16 + 32) ){
-			PORTC = PORTC | 0x80;
+			tmpC = tmpC | 0x80;
 		}
 		
 		
 		if ((tmpA & 0x0F) == 0){
-			PORTC = (PORTC & 0xC0) &(PORTC | 0x40) ;
+			tmpC = (tmpC & 0xC0) &(tmpC | 0x40) ;
 		}
 		else if ((tmpA & 0x0F) <= 2){
-			PORTC = PORTC |(32 + 64 );
+			tmpC = tmpC |(32 + 64 );
 		}
 		else if((tmpA & 0x0F) <=4){
-			PORTC = (PORTC & 0) |(32 + 16 + 64);
+			tmpC = tmpC |(32 + 16 + 64);
 		}
 		else if((tmpA & 0x0F) <= 6){
-			PORTC = PORTC |(32 + 16 + 8);
+			tmpC = tmpC |(32 + 16 + 8);
 		}
 		else if((tmpA & 0x0F) <= 9){
-			PORTC = PORTC |(32 + 16 + 8 + 4);
+			tmpC = tmpC |(32 + 16 + 8 + 4);
 		}
 		else if((tmpA & 0x0F) <= 12){
-			PORTC = PORTC |(32 + 16 + 8 + 4 + 2);
+			tmpC = tmpC |(32 + 16 + 8 + 4 + 2);
 		}
 		else if((tmpA & 0x0F) <= 15){
-			PORTC = PORTC |(32 + 16 + 8 + 4 + 2 + 1);
+			tmpC = tmpC |(32 + 16 + 8 + 4 + 2 + 1);
 		}
 		
 		
 		if( (tmpA & 0x0F) > 2){
-			PORTC = PORTC & 0xBF; 
+			tmpC = tmpC & 0xBF; 
 		}
 		
-		PORTC = tmpC
+		PORTC = tmpC;
     }
 }
 
