@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>amcda005_mcoyn001_lab1_part2</AssemblyName>
-    <Name>amcda005_mcoyn001_lab1_part2</Name>
-    <RootNamespace>amcda005_mcoyn001_lab1_part2</RootNamespace>
+    <AssemblyName>amcda005_mcoyn001_lab3_part2</AssemblyName>
+    <Name>amcda005_mcoyn001_lab3_part2</Name>
+    <RootNamespace>amcda005_mcoyn001_lab3_part2</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
@@ -28,20 +28,18 @@
     <ResetRule>0</ResetRule>
     <eraseonlaunchrule>0</eraseonlaunchrule>
     <EraseKey />
-<<<<<<< HEAD:mcoyn001_acmda005_lab2_part2/mcoyn001_acmda005_lab2_part2/mcoyn001_acmda005_lab2_part2.cproj
     <AsfFrameworkConfig>
       <framework-data xmlns="">
-  <options />
-  <configurations />
-  <files />
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.40.0" />
-  </dependencies>
-</framework-data>
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.40.0" />
+        </dependencies>
+      </framework-data>
     </AsfFrameworkConfig>
-=======
     <avrtool>com.atmel.avrdbg.tool.simulator</avrtool>
     <avrtoolserialnumber />
     <avrdeviceexpectedsignature>0x1E9706</avrdeviceexpectedsignature>
@@ -55,22 +53,6 @@
       </ToolNumber>
       <ToolName xmlns="">Simulator</ToolName>
     </com_atmel_avrdbg_tool_simulator>
-<<<<<<< HEAD
-    <AsfFrameworkConfig>
-      <framework-data xmlns="">
-  <options />
-  <configurations />
-  <files />
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.40.0" />
-  </dependencies>
-</framework-data>
-    </AsfFrameworkConfig>
-=======
->>>>>>> 36939902bb7cce5520ade8523833627356fbf4ad:lab2/amcda005_mcoyn001_lab1_part2/amcda005_mcoyn001_lab1_part2/amcda005_mcoyn001_lab1_part2.cproj
->>>>>>> 0acb61b31d3da953d34d10e5f6945a5cf0fb8b83
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
