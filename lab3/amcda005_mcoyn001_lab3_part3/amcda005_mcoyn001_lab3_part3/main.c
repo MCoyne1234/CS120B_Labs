@@ -12,7 +12,7 @@
 int main(void)
 {
     /* Replace with your application code */
-    	DDRA = 0xFF;
+    	DDRA = 0x00;
 		DDRB = 0xFF;
 		DDRC = 0xFF;
 		
