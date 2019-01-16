@@ -12,9 +12,9 @@
 
 int main(void)
 {	
-	DDRA = 0xFF; PORTA = 0x00;
+	DDRA = 0x00; PORTA = 0x00;
 	DDRB = 0xFF; PORTB = 0x00;
-	DDRC = 0x00; PORTC = 0x00;
+	DDRC = 0xFF; PORTC = 0x00;
 	
 	unsigned short tmpA = 0x00;
 	unsigned short tmpB = 0x00;
