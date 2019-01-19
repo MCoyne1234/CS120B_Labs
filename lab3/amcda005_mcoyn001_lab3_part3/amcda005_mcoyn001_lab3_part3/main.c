@@ -20,7 +20,7 @@ int main(void)
     
     while (1) 
     {
-        tmpA = PORTA;
+        tmpA = PINA;
         tmpC = PORTC;
         
         if((tmpA & (16 + 32 + 64)) == (16 + 32 + 64) ){

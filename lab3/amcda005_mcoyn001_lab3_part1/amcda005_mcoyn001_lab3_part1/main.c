@@ -24,8 +24,8 @@ int main(void)
     
     while(1)
     {
-         tmpA = PORTA;
-         tmpB = PORTB;
+         tmpA = PINA;
+         tmpB = PINB;
          A_B = (0x00 | tmpA);
          A_B = A_B << 8;
          A_B = (A_B | tmpB);
