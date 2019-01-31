@@ -10,35 +10,25 @@
 #include <timer.h>
 
 enum States{ PAUSE, ONE, TWO, THREE} state, prev;
-unsigned char button;
+unsigned char button, pressed;
  
  
 void Tick(){
-     
     switch(state){
         case PAUSE:
-        break;
-        case ONE:
-           PORTB = 0x01;
-        break;
-        case TWO:
-           PORTB = 0x02;
-       break;
-        case THREE:
-           PORTB = 0x04;
-        break;
-        default:
-        break;    
-        }
-     
-    button = PINA;
-    switch(state){
-        case PAUSE:
-           if(button) state = ONE;
+           
+            if(pressed){}
+            else if(!button) {
+               prev = ONE;
+               state = ONE; 
+           }
         break;
          case ONE:
-           prev = ONE;
-           if(button) state = PAUSE; 
+            prev = ONE;
+            if(button) {
+                //button = !button;
+                state = PAUSE;
+           }                
            else state = TWO;
         break;
         case TWO:
@@ -52,30 +42,53 @@ void Tick(){
         case THREE:
             if(button) state = PAUSE;
             else prev = THREE;
-           state = TWO;
+            state = TWO;
         break;
+
         default:break;
-    }
+    }         
+         switch(state){
+             case PAUSE:
+             break;
+             case ONE:
+             PORTB = 0x01;
+             break;
+             case TWO:
+             PORTB = 0x02;
+             break;
+             case THREE:
+             PORTB = 0x04;
+             break;
+             default:
+             break;
+         }
+         
 }     
 int main(void)
 {   
     DDRA = 0x00;
     DDRB = 0xFF;
-    DDRC = 0x00;
-    DDRD = 0x00;
     
     PORTB = 0x00;
     
     TimerSet(300);
     TimerOn();
     
-    button = 0;
+    button = 0x00;
+    
+    pressed = 0x00;
     state = ONE;
     prev = ONE;
     /* Replace with your application code */
         while(1){
-            Tick();
-            while(!TimerFlag){};          
+            Tick();            
+            while(!TimerFlag){ 
+                    pressed = PINA;
+                    if(pressed) {
+                        button = !button;
+                        state = PAUSE;
+                    }                    
+            }          
             TimerFlag = 0; 
         }
        return 0;
