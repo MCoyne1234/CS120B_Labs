@@ -14,12 +14,9 @@ int main(void)
     DDRB = 0xFF;
     PORTB = 0x00;
     /* Replace with your application code */
-    unsigned char tempA;
     while (1) 
     {
-        
-        tempA = PINA;
-        PORTB = tempA;
+        PORTB = PINA;
     }
 }
 
