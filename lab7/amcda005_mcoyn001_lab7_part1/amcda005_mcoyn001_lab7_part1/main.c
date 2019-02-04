@@ -95,5 +95,6 @@ int main(void)
         }
         Tick();
         TimerFlag = 0;
+        LCD_DisplayString(1, count + '0');
 }
 
