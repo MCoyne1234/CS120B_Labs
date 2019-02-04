@@ -9,13 +9,17 @@
 #include <avr/io.h>
 #include <timer.h>
 
-enum States{ PAUSE, ONE, TWO, THREE} state, prev;
-unsigned char button;
+enum States{ BD, PAUSE, ONE, TWO, THREE} state, prev, next;
+unsigned char button, pressed;
  
  
 void Tick(){
      
     switch(state){
+        case BD:
+            if (pressed){}
+            else {button = !button}       
+        break;
         case PAUSE:
         break;
         case ONE:
@@ -31,8 +35,11 @@ void Tick(){
         break;    
         }
      
-    button = PINA;
     switch(state){
+        case BD:
+            if (pressed){}
+            else {state = next;}
+        break;
         case PAUSE:
            if(button) state = ONE;
         break;
@@ -42,11 +49,15 @@ void Tick(){
            else state = TWO;
         break;
         case TWO:
-        if(button) state = PAUSE;
-        else {
-            if( prev == ONE ) state = THREE;
-            else state = ONE;
-        }            
+            if( prev == ONE ){ 
+                state = THREE;
+                next = THREE;
+            }
+            else { 
+                state = ONE;
+                next = ONE;
+            }                           
+            
             prev = TWO;
         break;
         case THREE:
@@ -75,7 +86,7 @@ int main(void)
     /* Replace with your application code */
         while(1){
             Tick();
-            while(!TimerFlag){};          
+            while(!TimerFlag){pressed = PINA;};          
             TimerFlag = 0; 
         }
        return 0;
