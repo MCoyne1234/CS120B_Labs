@@ -23,10 +23,10 @@ void Tick(){
         switch(state){
             case BD:
                 score++;
-                if(score != 6){
-                    state = WIN;
-                    PORTB = 0x07;
-                }else if (score < 4){state = WIN; PORTB = 0x05;}
+                //if(score != 6){
+                 //   state = WIN;
+                   // PORTB = 0x07;
+                //}else if (score < 4){state = WIN; PORTB = 0x05;}
                 //if(prev == TWO) score++;
                 //else score--;
             break;
@@ -48,7 +48,8 @@ void Tick(){
                 PORTB = 0x04;
             break;
             case WIN:
-            
+                LCD_ClearScreen();
+                LCD_Cursor(1);
                 LCD_DisplayString(1, w_p);
                 PORTB = 0x07;
             break;
@@ -67,10 +68,10 @@ void Tick(){
             }
             break;
             case PAUSE:
-                if(score >= 6){
+                if(score >= 9){
                     state = WIN;
                     PORTB = 0x07;
-                }else if (score < 4){state = WIN; PORTB = 0x05;}
+                }else if (score < 0){}
             break;
             case ONE:
                 prev = ONE;
@@ -120,6 +121,8 @@ int main(void)
     p_s = BD;
     
     LCD_ClearScreen();
+    LCD_Cursor(1);
+    LCD_WriteData(score + '0');
     /* Replace with your application code */
         while(1){
             Tick();
@@ -129,7 +132,6 @@ int main(void)
                     button = 0xFF;
                     released = 0x00;
                     state = p_s;
-                    state = WIN;
                     }else{released = 0xFF;}                 
              }          
             TimerFlag = 0; 
