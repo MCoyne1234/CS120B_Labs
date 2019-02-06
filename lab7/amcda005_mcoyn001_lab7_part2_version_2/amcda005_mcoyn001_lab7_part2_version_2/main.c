@@ -9,6 +9,7 @@
 #include <avr/io.h>
 #include "timer.h"
 #include "io.h"
+#include <io.c>
 
 
 enum States{ PAUSE, BD, ONE, TWO, THREE, WIN} state, prev, next, p_s;
@@ -47,6 +48,7 @@ void Tick(){
                 PORTB = 0x04;
             break;
             case WIN:
+            
                 LCD_DisplayString(1, w_p);
                 PORTB = 0x07;
             break;
@@ -117,6 +119,7 @@ int main(void)
     prev = ONE;
     p_s = BD;
     
+    LCD_ClearScreen();
     /* Replace with your application code */
         while(1){
             Tick();

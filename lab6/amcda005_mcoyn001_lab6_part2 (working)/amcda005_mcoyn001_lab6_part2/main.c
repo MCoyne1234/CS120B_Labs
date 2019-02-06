@@ -1,6 +1,6 @@
 /*    Partner(s) Name & E-mail:Ashley McDaniel amcda005@ucr.edu & Matthew Coyne mcoyn001@ucr.edu
  *    Lab Section: 022
- *    Assignment: Lab # 7 Exercise # 2
+ *    Assignment: Lab # 6 Exercise # 2
  *    Exercise Description: [optional - include for your own benefit]
  *      
  *    I acknowledge all content contained herein, excluding template or example
@@ -11,23 +11,15 @@
 #include "io.h"
 
 
-enum States{ PAUSE, BD, ONE, TWO, THREE, WIN} state, prev, next, p_s;
-unsigned char button, pressed, released, is_paused, score;
+enum States{ PAUSE, BD, ONE, TWO, THREE} state, prev, next, p_s;
+unsigned char button, pressed, released, is_paused;
 unsigned long period = 300; // period before each transition is; 
-const unsigned char win_mess[] = "You Win";
-const unsigned char* w_p= &(win_mess[0]);
+
  
 void Tick(){
           
         switch(state){
             case BD:
-                score++;
-                if(score != 6){
-                    state = WIN;
-                    PORTB = 0x07;
-                }else if (score < 4){state = WIN; PORTB = 0x05;}
-                //if(prev == TWO) score++;
-                //else score--;
             break;
             case PAUSE:
 
@@ -65,10 +57,6 @@ void Tick(){
             }
             break;
             case PAUSE:
-                if(score >= 6){
-                    state = WIN;
-                    PORTB = 0x07;
-                }else if (score < 4){state = WIN; PORTB = 0x05;}
             break;
             case ONE:
                 prev = ONE;
@@ -91,9 +79,6 @@ void Tick(){
                 state = TWO;
                 next = TWO;
             break;
-            case WIN:
-                //if(button && released){state = ONE;}
-            break;
             default:break;
         }
 }     
@@ -101,8 +86,6 @@ int main(void)
 {   
     DDRA = 0x00; PORTA = 0x00; 
     DDRB = 0xFF; PORTB = 0x00; 
-    DDRC = 0xFF; PORTC = 0x00; // LCD data lines
-    DDRD = 0xFF; PORTD = 0x00; // LCD control lines
     
     TimerSet(period);
     TimerOn();
@@ -111,7 +94,6 @@ int main(void)
     pressed = 0x00;
     released = 0xFF;
     is_paused = 0x00;
-    score = 5;
     
     state = ONE;
     prev = ONE;
@@ -126,7 +108,6 @@ int main(void)
                     button = 0xFF;
                     released = 0x00;
                     state = p_s;
-                    state = WIN;
                     }else{released = 0xFF;}                 
              }          
             TimerFlag = 0; 

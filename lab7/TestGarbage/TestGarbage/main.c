@@ -9,6 +9,7 @@
 #include <avr/io.h>
 #include "timer.h"
 #include "io.h"
+//#include <io.h>
 
 
 enum States{ PAUSE, BD, ONE, TWO, THREE, WIN} state, prev, next, p_s;
@@ -21,13 +22,15 @@ void Tick(){
           
         switch(state){
             case BD:
-                score++;
-                if(score != 6){
+                if(prev == TWO) score++;
+                else score--;
+                
+                if(score >= 9){
                     state = WIN;
+                    p_s = WIN;
                     PORTB = 0x07;
                 }else if (score < 4){state = WIN; PORTB = 0x05;}
-                //if(prev == TWO) score++;
-                //else score--;
+
             break;
             case PAUSE:
 
@@ -46,7 +49,7 @@ void Tick(){
             case THREE:
                 PORTB = 0x04;
             break;
-            case WIN:
+            case WIN:               
                 LCD_DisplayString(1, w_p);
                 PORTB = 0x07;
             break;
@@ -65,10 +68,10 @@ void Tick(){
             }
             break;
             case PAUSE:
-                if(score >= 6){
-                    state = WIN;
-                    PORTB = 0x07;
-                }else if (score < 4){state = WIN; PORTB = 0x05;}
+//                 if(score >= 6){
+//                     state = WIN;
+//                     PORTB = 0x07;
+//                 }else if (score < 4){state = WIN; PORTB = 0x05;}
             break;
             case ONE:
                 prev = ONE;
@@ -92,7 +95,7 @@ void Tick(){
                 next = TWO;
             break;
             case WIN:
-                //if(button && released){state = ONE;}
+                if(button && released){state = ONE;}
             break;
             default:break;
         }
@@ -133,3 +136,5 @@ int main(void)
         }
        return 0;
 }
+
+

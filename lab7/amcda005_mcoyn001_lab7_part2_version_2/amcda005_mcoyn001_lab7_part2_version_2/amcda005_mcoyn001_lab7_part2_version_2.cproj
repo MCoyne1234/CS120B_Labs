@@ -12,18 +12,18 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>amcda005_mcoyn001_lab7_part2</AssemblyName>
-    <Name>amcda005_mcoyn001_lab7_part2</Name>
-    <RootNamespace>amcda005_mcoyn001_lab7_part2</RootNamespace>
+    <AssemblyName>amcda005_mcoyn001_lab7_part2_version_2</AssemblyName>
+    <Name>amcda005_mcoyn001_lab7_part2_version_2</Name>
+    <RootNamespace>amcda005_mcoyn001_lab7_part2_version_2</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
     <CacheFlash>true</CacheFlash>
     <ProgFlashFromRam>true</ProgFlashFromRam>
-    <RamSnippetAddress />
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
     <UncachedRange />
     <preserveEEPROM>true</preserveEEPROM>
-    <OverrideVtorValue />
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
     <BootSegment>2</BootSegment>
     <ResetRule>0</ResetRule>
     <eraseonlaunchrule>0</eraseonlaunchrule>

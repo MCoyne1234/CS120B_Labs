@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>amcda005_mcoyn001_lab7_part2</AssemblyName>
-    <Name>amcda005_mcoyn001_lab7_part2</Name>
-    <RootNamespace>amcda005_mcoyn001_lab7_part2</RootNamespace>
+    <AssemblyName>TestGarbage</AssemblyName>
+    <Name>TestGarbage</Name>
+    <RootNamespace>TestGarbage</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
