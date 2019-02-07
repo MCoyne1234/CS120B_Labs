@@ -12,94 +12,102 @@
 #include <io.c>
 
 
-enum States{ PAUSE, BD, ONE, TWO, THREE, WIN} state, prev, next, p_s;
+enum States{ RESTART, PAUSE, BD, ONE, TWO, THREE, WIN} state, prev, next, p_s;
 unsigned char button, pressed, released, is_paused, score;
 unsigned long period = 300; // period before each transition is; 
-const unsigned char win_mess[] = "You Win";
+const unsigned char win_mess[] = "You Win!";
 const unsigned char* w_p= &(win_mess[0]);
  
 void Tick(){
-          
-        switch(state){
-            case BD:
-                score++;
-                //if(score != 6){
-                 //   state = WIN;
-                   // PORTB = 0x07;
-                //}else if (score < 4){state = WIN; PORTB = 0x05;}
-                //if(prev == TWO) score++;
-                //else score--;
-            break;
-            case PAUSE:
-
-                if(released){
-                    p_s = BD;
-                    button = 0x00;
-                    }
-                else{p_s = PAUSE;}
-            break;            
-            case ONE:
-                PORTB = 0x01;
-            break;
-            case TWO:
-                PORTB = 0x02;
-            break;
-            case THREE:
-                PORTB = 0x04;
-            break;
-            case WIN:
-                LCD_ClearScreen();
-                LCD_Cursor(1);
-                LCD_DisplayString(1, w_p);
-                PORTB = 0x07;
-            break;
-            default:
-            break;
-        }
-        switch(state){
-            case BD:
-            //When button is pressed, figure out whether to Pause, or restart.
+    switch(state){
+        case RESTART:
+            score = 0;
+            LCD_Cursor(1);
+            LCD_ClearScreen();
+            LCD_Cursor(1);
+            LCD_WriteData(score + '0');
+        break;
+        case BD:
+        //When button is pressed, figure out whether to Pause, or restart.
             if(!is_paused){
                 state = PAUSE;
                 is_paused = !is_paused;
-            }else {
+                }else {
                 state = ONE;
                 is_paused = !is_paused;
             }
-            break;
-            case PAUSE:
-                if(score >= 9){
-                    state = WIN;
-                    PORTB = 0x07;
-                }else if (score < 0){}
-            break;
-            case ONE:
-                prev = ONE;
-                state = TWO;
-                next = TWO;
-            break;
-            case TWO:        
-                if( prev == ONE ){
-                    state = THREE;
-                    next = THREE;
-                }
-                else {
-                    state = ONE;
-                    next = ONE;
-                }
-                prev = TWO;
-            break;
-            case THREE:
-                prev = THREE;
-                state = TWO;
-                next = TWO;
-            break;
-            case WIN:
-                //if(button && released){state = ONE;}
-            break;
-            default:break;
+        break;
+        case PAUSE:
+            if(score >= 9){
+                state = WIN;
+                PORTB = 0x07;
+                }else if (score <= 0){}
+                 else if (prev == TWO) score++;
+                 else score--;
+        break;
+        case ONE:
+            prev = ONE;
+            state = TWO;
+            next = TWO;
+        break;
+        case TWO:
+            if( prev == ONE ){
+                state = THREE;
+                next = THREE;
+            }
+            else {
+                state = ONE;
+                next = ONE;
+            }
+            prev = TWO;
+        break;
+        case THREE:
+            prev = THREE;
+            state = TWO;
+            next = TWO;
+        break;
+        case WIN:
+            if(button && released){state = ONE;}
+        break;
+        default:break;
         }
-}     
+          
+    switch(state){
+        case RESTART:
+            p_s = BD;
+            state = ONE;
+        break;
+        case BD:
+        break;
+        case PAUSE:
+            if(released){
+                p_s = BD;
+                button = 0x00;
+            }
+            else{p_s = PAUSE;}
+        break;            
+        case ONE:
+            PORTB = 0x01;
+        break;
+        case TWO:
+            PORTB = 0x02;
+        break;
+        case THREE:
+            PORTB = 0x04;
+        break;
+        case WIN:
+            LCD_Cursor(1);
+            LCD_ClearScreen();
+            LCD_Cursor(1);
+            LCD_DisplayString(1, w_p);
+            PORTB = 0x07;
+            p_s = RESTART;
+        break;
+        default:
+        break;
+    }
+} 
+    
 int main(void)
 {   
     DDRA = 0x00; PORTA = 0x00; 
@@ -120,12 +128,15 @@ int main(void)
     prev = ONE;
     p_s = BD;
     
+    LCD_init();
+    LCD_Cursor(1);
     LCD_ClearScreen();
     LCD_Cursor(1);
     LCD_WriteData(score + '0');
+    
     /* Replace with your application code */
         while(1){
-            Tick();
+            Tick();          
             while(!TimerFlag){
                 pressed = PINA;
                 if(pressed){ 
