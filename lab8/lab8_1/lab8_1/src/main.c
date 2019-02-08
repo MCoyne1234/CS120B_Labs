@@ -9,6 +9,7 @@
 
 #include <avr/io.h>
 #include "io.c"
+#include "timer.h"
 
 void ADC_init() {
 	ADCSRA |= (1 << ADEN) | (1 << ADSC) | (1 << ADATE);
@@ -21,16 +22,24 @@ void ADC_init() {
 
 int main(void)
 {
+    DDRB = 0xFF;
+    DDRD = 0xFF;   
 	ADC_init();
+    TimerSet(100);
+    TimerOn();
 	unsigned short my_short= 0xABCD;
-	
+    unsigned char tmpB, tmpD;
+	TimerFlag = 0;
     /* Replace with your application code */
     while (1) 
     {
 		my_short = ADC; 
-		PORTB = (0x00FF & my_short);	//(0000000011111111 & 0xABCD)
-		PORTD = (my_short >> 8);			//shift over ADC 8 bits
-		
+		tmpB = (0x00FF & my_short);	//(0000000011111111 & 0xABCD)
+		tmpD = (my_short >> 8);			//shift over ADC 8 bits
+	    PORTB = tmpB;
+        PORTD = tmpD;
+        while(!TimerFlag);
+        TimerFlag = 0;	
 	}
 }
 
