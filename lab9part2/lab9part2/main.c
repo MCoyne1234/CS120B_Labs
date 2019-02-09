@@ -13,13 +13,6 @@
 
 #include <avr/io.h>
 #include "timer.h"
-// 0.954 hz is lowest frequency possible with this function,
-// based on settings in PWM_on()
-// Passing in 0 as the frequency will stop the speaker from generating sound
-unsigned char temp_a, temp_b; 
-unsigned char press = 0; 
-
-double c4 = 261.63, d4 = 293.66, e4 = 329.63; //global variables :(
 
 void set_PWM(double frequency) {
 	static double current_frequency; // Keeps track of the currently set frequency
@@ -57,19 +50,19 @@ void PWM_off() {
 	TCCR0A = 0x00;
 	TCCR0B = 0x00;
 }
+
+// 0.954 hz is lowest frequency possible with this function,
+// based on settings in PWM_on()
+// Passing in 0 as the frequency will stop the speaker from generating sound
+unsigned char temp_a, temp_b, count;
+unsigned char press = 0;
+
+//double c4 = 261.63, d4 = 293.66, e4 = 329.63; //global variables :(
+
 enum States { off, increase, decrease, buttonPress, playingNotes} state;
 void Tick(){
 	double notes [8] = {261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25};
-	temp_a = PINA;//reading input
-	//temp_a = ~PINA & 0x06;
-	int count = 0;
-	DDRB = 0xFF;
-	DDRA = 0x00;
-	TimerSet(1);
-	TimerOn();
-	TimerFlag = 0;
-	PWM_on();
-	set_PWM(0);
+	temp_a = PINA & 0x07;//reading input
 	
 	switch(state){	
 		case off:
@@ -153,6 +146,8 @@ void Tick(){
 				state = playingNotes;
 			}
 			break;
+        case increase:
+        break;
 		case decrease:
 			if(temp_a == 0x04){
 				if(!press){
