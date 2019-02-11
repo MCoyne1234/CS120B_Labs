@@ -61,7 +61,7 @@ enum States { off, increase, decrease, buttonPress, playingNotes} state;
 void Tick(){
 	double notes [8] = {261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25};
 	temp_a = PINA;//reading input
-	//temp_a = ~PINA & 0x06;
+	
 	int count = 0;
 	DDRB = 0xFF;
 	DDRA = 0x00;
@@ -70,12 +70,11 @@ void Tick(){
 	TimerFlag = 0;
 	PWM_on();
 	set_PWM(0);
-	
 	switch(state){	
 		case off:
 			if(temp_a == 0x02){
 				if(count < 7){
-					count ++; 
+					count ++; //increment the counter
 				}
 				set_PWM(notes[count]);
 				state = increase; 
@@ -85,6 +84,8 @@ void Tick(){
 					count --;
 				}
 				set_PWM(notes[count]);
+				while(!TimerFlag){}
+				TimerFlag = 0;
 				state = decrease;
 			}
 			else{
@@ -100,6 +101,8 @@ void Tick(){
 					count ++;
 				}
 				set_PWM(notes[count]);
+				while(!TimerFlag){}
+				TimerFlag = 0;
 				state = increase;
 			}
 			else{
@@ -113,7 +116,10 @@ void Tick(){
 					count --;
 				}
 				set_PWM(notes[count]);
+				while(!TimerFlag){}
+				TimerFlag = 0;
 				state = decrease;
+			
 			}
 			else{
 					state = off;
@@ -131,6 +137,8 @@ void Tick(){
 					state = buttonPress;
 					PWM_on();
 					set_PWM(notes[count]);
+					while(!TimerFlag){}
+					TimerFlag = 0;
 					//then set !press back to press
 					press = 1; 
 				}
@@ -158,6 +166,8 @@ void Tick(){
 				if(!press){
 					PWM_on();
 					set_PWM(notes[count-1]);
+					while(!TimerFlag){}
+					TimerFlag = 0;
 					//then set !press back to press
 					press = 1;
 				}
@@ -193,6 +203,8 @@ int main(void)
 	
 	PWM_on();
 	set_PWM(0);
+	PORTB = 0x00;
+	state = off;
     /* Replace with your application code */
     while (1) 
     {
