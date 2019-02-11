@@ -1,4 +1,9 @@
-
+/*
+ * lab9_3.c
+ *
+ * Created: 2/8/2019 4:16:09 PM
+ * Author : Administrator
+ */ 
 
 #include <avr/io.h>
 #include "timer.h"
@@ -45,51 +50,52 @@ void PWM_off() {
 }
 
 
-enum States {OFF, NOTE_C4, NOTE_D4, NOTE_E4, HOLD}state;
-double c4 = 261.63; 
+enum States {OFF, PLAY} state;
+unsigned short system_period = 80; // 1/16th of a second is 62.5 ms, just round to 63;
+//unsigned char bpm = 120; // 2 beats per second
+//unsigned char bpm = 60; // Let's start with 1 beat per second to make it easy and adjust later maybe.
+unsigned char eigth = 2 ; // ticks per note
+unsigned char quarter = 6; // ticks per note 
+unsigned char half = 8; // ticks per note 
+unsigned char whole = 16;
+
+double c4 = 261.63;
 double d4 = 293.66;
 double e4 = 329.63;
+double f4 = 349.23;
+double g4 = 392.00;
+double a4 = 440.00;
+double b4 = 493.88;
+double c5 = 523.25;
+double d5 = 587.33;
+double e5 = 659.25;
+double f5 = 698.46;
+double g5 = 783.99;
+
+unsigned char notes_number = 20;
+unsigned char position = 0, count = 0;
 
 void Tick()
 {
-    unsigned char tempA = (~PINA & 0x07);
+    double music_notes[] = {d4,0.0,d4,0.0,d4,g4,d5,c5,b4,a4,g5,d5,c5,b4,a4,g5,d5,c5,b4,c5,a4};
+    unsigned char note_length[] = {eigth,1,eigth,1,eigth,half,half,eigth,eigth,eigth, half, quarter, eigth,eigth,eigth, half, quarter, eigth,eigth,eigth,whole};
+
+    unsigned char tempA = (~PINA & 0x01);
     
     switch(state)
     {
         case OFF:
-            if(tempA == 0x01){
-                state = NOTE_C4;
-            }
-            else if(tempA == 0x02){
-                state = NOTE_D4;
-            }
-            else if(tempA == 0x04){
-                state = NOTE_E4;
-            }
-            else{
-                state = OFF;
-            }
-        break;
-        case NOTE_C4:
-            if(tempA == 0x01){
-                state = NOTE_C4;
-            }else{
-                    state = OFF;
-            }
-        break;
-        case NOTE_D4:
-        if(tempA == 0x02){
-            state = NOTE_D4;
-        }else{
+        if(tempA == 0x01){
+            state = PLAY;
+        }
+        else{
             state = OFF;
         }
         break;
-        case NOTE_E4:
-            if(tempA == 0x04){
-                state = NOTE_E4;
-            }else{
-                state = OFF;
-            }
+        case PLAY:
+        if( (position >=notes_number) && (count >= note_length[position])){
+            state = OFF;
+        }
         break;
         default:
         state = OFF;
@@ -99,19 +105,19 @@ void Tick()
     switch(state)
     {
         case OFF:
-        set_PWM(0);
+            set_PWM(0);
+            count = 0;
+            position = 0;
         break;
-        case NOTE_C4:
-        set_PWM(c4);
-        break;
-        case NOTE_D4:
-        set_PWM(d4);
-        break;
-        case NOTE_E4:
-        set_PWM(e4);
-        break;
-        case HOLD:
-        set_PWM(0);
+        case PLAY:
+            if(count < note_length[position]){
+                set_PWM(music_notes[position]);
+            }else {
+                position++;
+                count = 0;
+                set_PWM(music_notes[position]);              
+            }     
+            count++;                      
         break;
         default:
         set_PWM(0);
@@ -127,22 +133,21 @@ int main()
     
     
     PWM_on();
-    set_PWM(0);    
+    set_PWM(0);
+    
+    TimerSet(system_period);
+    TimerOn();
     
     state = OFF;
     TimerFlag = 0;
-    //unsigned char tempA;
+    count = 0;
+    position = 0;
     while (1)
-    {      
+    {
         Tick();
-//         tempA = ~PINA; // Input is reversed to be activated on low, so we need to bitwise inverse PINA to get the same kind of logic as usual. 
-//         if( (tempA & 0x01) == 0x01){
-//             set_PWM(440.00);
-//             PORTD = 0xFF;
-//         }      
-//        while(!TimerFlag);
-//        TimerFlag = 0;  
-  
+         // Input is reversed to be activated on low, so we need to bitwise inverse PINA to get the same kind of logic as usual.
+        while(!TimerFlag);
+        TimerFlag = 0;       
     }
     return 0;
 }
