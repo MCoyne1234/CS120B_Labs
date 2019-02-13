@@ -1,9 +1,12 @@
-/*
- * lab8part3.c
- *
- * Created: 2/6/2019 5:50:07 PM
- * Author : ashle
- */ 
+/*    Partner(s) Name & E-mail:Ashley McDaniel amcda005@ucr.edu & Matthew Coyne mcoyn001@ucr.edu
+ *    Lab Section: 022
+ *    Assignment: Lab # 8 Exercise # 3
+ *    Exercise Description: [optional - include for your own benefit]
+ *      Change LED lights when a button is pressed. 
+ *      Consider more transitions to capture long presses? The simple solution has poor behavior. 
+ *    I acknowledge all content contained herein, excluding template or example
+ *    code, is my own original work.
+ */
 //Exercise 3: Turning on/off an LED using a Photoresistor
 
 #include <avr/io.h>
@@ -20,7 +23,7 @@ void ADC_init() {
 int main(void)
 {
 	ADC_init();
-	unsigned short max = 0xFFFF; 
+	unsigned short max = 0x0180; 
 	
 	/* Replace with your application code */
 	while (1)
