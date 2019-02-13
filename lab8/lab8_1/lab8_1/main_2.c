@@ -1,8 +1,10 @@
-/*
- * lab8parta.c
- *
- * Created: 2/6/2019 5:26:10 PM
- * Author : ashle
+/*    Partner(s) Name & E-mail:Ashley McDaniel amcda005@ucr.edu & Matthew Coyne mcoyn001@ucr.edu
+ *    Lab Section: 022
+ *    Assignment: Lab # 8 Exercise # 1
+ *    Exercise Description: [optional - include for your own benefit]
+ *      
+ *    I acknowledge all content contained herein, excluding template or example
+ *    code, is my own original work.
  */ 
 
 //Exercise 1: ADC using Potentiometer

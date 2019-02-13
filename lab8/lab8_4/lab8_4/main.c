@@ -1,9 +1,10 @@
-/*
- * Lab8part4.c
- *
- * Created: 2/6/2019 5:59:06 PM
- * Author : ashle
- */ 
+/*    Partner(s) Name & E-mail:Ashley McDaniel amcda005@ucr.edu & Matthew Coyne mcoyn001@ucr.edu
+ *    Lab Section: 022
+ *    Assignment: Lab # 8 Exercise # 4
+ *    Exercise Description: [optional - include for your own benefit]
+ *    I acknowledge all content contained herein, excluding template or example
+ *    code, is my own original work.
+ */
 //Exercise 4: Light Meter (Challenge)
 
 #include <avr/io.h>
@@ -23,7 +24,8 @@ int main(void)
     
 	ADC_init();
 	unsigned short adc_var = 0x0000;
-	unsigned short inc = (128 + 64)/8;		//replace with (max/8)
+	unsigned short max = (0x0180); // The
+	unsigned short inc = (max)/8;		//replace with (max/8)
     while (1) 
     {
 		adc_var = ADC;					//read ADC in variable
@@ -60,7 +62,8 @@ int main(void)
 			//then turn on 1 LEDs
 			PORTB = 0x01;
 		}
-		else{//nothingggggggg
+		else{
+			PORTB = 0x00;
 		}
     }
 }
