@@ -16,7 +16,7 @@ void Tick(){
 	unsigned char threeLeds = 0x00;
 	unsigned char blinkLed = 0x00; 
 	static int count = 0;
-	
+	static int count_blink = 0; 
 	switch(leds3_state){ // 3 LEDs in sequence
 		case zeroToOne:
 			//if(threeLeds == 0x00){
@@ -45,13 +45,13 @@ void Tick(){
 	switch(blink_state){
 		case off:
 			blinkLed = 0x00; 
-			if(count == 1000){ //wait till  ms to switch to next state
+			if(count_blink == 1000){ //wait till  ms to switch to next state
 				blink_state = on; 
 			}
 			break;
 		case on:
 			blinkLed = 0x08;
-			if(count == 1000){ //wait till  ms to switch to next state
+			if(count_blink == 1000){ //wait till  ms to switch to next state
 				blink_state = off; 
 			}
 			break; 
@@ -62,18 +62,25 @@ void Tick(){
 	//now time to combine these SM 
 	switch(combine_state){
 		case combine:
-			if(count == 300 || count == 1000){ //wait till 1000 ms to switch to next state
-				PORTB = (threeLeds | blinkLed); // (or) these together
-			}
-			
+		//	if(count == 300 || count_blink == 1000){ //wait till 1000 ms to switch to next state
+			PORTB = (threeLeds | blinkLed); // (or) these together
+			//}
 			break; 
 		default:
 			combine_state = combine;
 	}
-	if(count < 1000){
+	if(count < 300 ){
 		count++; //increase count 
 	}
-	else{ count = 0;}
+	else{
+		count = 0;
+	}
+	if(count_blink < 1000){
+		count_blink++;
+	}
+	else{
+		count_blink = 0; 
+	}
 }
 
 int main(void)
