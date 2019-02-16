@@ -12,14 +12,19 @@ enum States0 {zeroToOne, oneToOne, twoToOne} leds3_state;
 enum States1 {off, on} blink_state;
 enum States2 {combine} combine_state;
 enum States3 {off1, play} button_state;
+    
+unsigned char temp_a;	
+unsigned char threeLeds = 0x00;
+unsigned char blinkLed = 0x00;
+unsigned char buzzer = 0x00;     
 void Tick(){
-	unsigned char threeLeds = 0x00;
-	unsigned char blinkLed = 0x00;
-	unsigned char buzzer = 0x00;  
+
 	static int count = 0;
 	static int count_blink = 0; 
 	static int count_buzzer = 0; 
-	unsigned char temp_a = PINA; 
+	temp_a = PINA & 0x04; 
+    //unsigned char temp_b = 0x00;
+    
 	switch(leds3_state){ // 3 LEDs in sequence
 		case zeroToOne:
 			//if(threeLeds == 0x00){
@@ -63,15 +68,18 @@ void Tick(){
 	}
 	switch(button_state){
 		case off1:
-		if((count_buzzer == 2) && (temp_a == 0x04)){
-			button_state = play;
-		}
-		else{}
+		    if( temp_a ){
+			    button_state = play;       
+                 //buzzer = (buzzer ^ 0x10);
+            }else buzzer = 0x00; 
 		break;
 		case play:
-		if((count_buzzer == 2) && (temp_a == 0x04)){
-			buzzer = (buzzer^0x08); //xor 
-		}
+		///* 
+            if ( (temp_a) == 0x00 ){ button_state = off1; buzzer = 0x00; }
+            else if((count_buzzer == 2) && ( (temp_a ) == 0x04)){
+			    buzzer = (buzzer^0x10); //xor 
+		    }
+        //*/
 		break;
 		default: 
 		break;
@@ -79,10 +87,9 @@ void Tick(){
 	//now time to combine these SM 
 	switch(combine_state){
 		case combine:
-		//	if(count == 300 || count_blink == 1000){ //wait till 1000 ms to switch to next state
+            //if ( (temp_a) == 0x00 ){ buzzer = 0x00; }
 			PORTB = (threeLeds | blinkLed | buzzer); // (or) these together
-			//}
-			break; 
+		break; 
 		default:
 			combine_state = combine;
 	}
@@ -105,11 +112,12 @@ void Tick(){
 	else{
 		count_buzzer = 0; 
 	}
-	}
+}
 
 int main(void)
 {
-	DDRB = 0xFF; 
+    DDRA = 0x00; PORTA = 0x00;
+	DDRB = 0xFF; PORTB = 0x00;
 	TimerSet(1); //set timer to 1 ms
 	TimerOn();   //turn timer on 
 	TimerFlag = 0;
