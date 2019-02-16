@@ -10,12 +10,13 @@
 
 int main(void)
 {
-	DDRB = 0xFF; // init
-	DDRA = 0x00; 
+    DDRA = 0x00; PORTA = 0X00;
+	DDRB = 0xFF; PORTB = 0X00;// init
+	 
 	unsigned char temp_a = 0x00; 
 	int count = 0; //buzzer count for 2 ms
 	
-	TimerSet(2); //set timer to 1 ms
+	TimerSet(1); //set timer to 1 ms
 	TimerOn();   //turn timer on
 	TimerFlag = 0;    
 	
