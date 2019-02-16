@@ -9,7 +9,7 @@
 #include "timer.h"
 
 enum StatesLED{WAIT, INC, DEC, RESET} stateLED;
-unsigned char tempA, output, buttonRead = 5;
+unsigned char tempA, output, buttonRead = 3;
 unsigned long buttonCount;
 
 void Tick(){
@@ -28,15 +28,15 @@ void Tick(){
             }else if( (output < 9) && tempA && (buttonCount >= buttonRead) && ( buttonCount == 3400) ){
                 ++output;
                 buttonCount = 3000;
-            }
+            }else if( (output < 9) && tempA && buttonCount == buttonRead ) ++output;
         break;
         case DEC:
             if((output > 0) && tempA && (buttonCount >= buttonRead) && (buttonCount < 3000) && (buttonCount % 1000 == 0)){
                 --output;
-                }else if( (output > 0) && tempA && (buttonCount >= buttonRead) &&  (buttonCount == 3400) ){
+            }else if( (output > 0) && tempA && (buttonCount >= buttonRead) &&  (buttonCount == 3400) ){
                 --output;
-                 buttonCount = 3000;
-            }
+                buttonCount = 3000;
+            }else if( (output > 0) && tempA && buttonCount == buttonRead ) --output;
         break;
         case RESET:
             output = 0x00;
@@ -68,6 +68,7 @@ void Tick(){
         break;
     }  
     PORTB = output;
+    //PORTB = 0x0F;
 }
 
 int main(void)
@@ -80,7 +81,7 @@ int main(void)
     TimerFlag = 1;
     
     stateLED = WAIT;
-    output = 0;
+    output = 1;
     /* Replace with your application code */
     while (1) 
     {
