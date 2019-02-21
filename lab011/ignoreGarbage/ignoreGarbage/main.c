@@ -66,13 +66,27 @@ unsigned char GetKeypadKey() {
 
 }
 
-enum States {LISTEN};
-int Tick(int state){
-    static unsigned char x;
-    x = GetKeypadKey();
+
+void KeypadTick(){
+
+}
+
+
+int main(void)
+{
+    DDRA = 0x00; PORTA = 0x00;
+    DDRB = 0xFF; PORTB = 0x00;
+    DDRC = 0xF0; PORTC = 0x0F; // PORTB set to output, outputs init 0s
+    DDRD = 0xFF; PORTD = 0x00; // PC7..4 outputs init 0s, PC3..0 inputs init 1s
+    unsigned long keypad_time = 10;
     
-    switch(state) {
-        case LISTEN:    
+    TimerSet(5);
+    TimerOn();
+    TimerFlag = 0;
+    unsigned char x;
+    while(1) {
+            
+            x = GetKeypadKey();
             switch (x) {
                 case '\0': PORTB = 0x1F; break; // All 5 LEDs on
                 case '1': PORTB = 0x01; break; // hex equivalent
@@ -93,55 +107,8 @@ int Tick(int state){
                 case '#': PORTB = 0x0F; break;
                 default: PORTB = 0x1B; break; // Should never occur. Middle LED off.
             }
-        break;
-        default:
-            state = LISTEN;
-        break;
-    }
-    return state;    
+            while(!TimerFlag){};
+                TimerFlag = 0;
+        }
 }
-
-
-int main(void)
-{
-    DDRA = 0x00; PORTA = 0x00;
-    DDRB = 0xFF; PORTB = 0x00;
-    DDRC = 0xF0; PORTC = 0x0F; 
-    DDRD = 0xFF; PORTD = 0x00; // PC7..4 outputs init 0s, PC3..0 inputs init 1s
-    
-    unsigned long keypad_time = 10;
-    static task task1;
-    task *tasks[] = { &task1};
-    const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
-    
-   task1.state = -1;//Task initial state.
-   task1.period = keypad_time;//Task Period.
-   task1.elapsedTime = keypad_time; // Task current elasped time.
-   task1.TickFct = &Tick; // Function pointer for the tick.
-  
-   // Set the timer and turn it on
-   TimerSet(5);
-   TimerOn();
-
-   unsigned short i; // Scheduler for-loop iterator
-   
-       while(1){
-       // Scheduler code
-       for ( i = 0; i < numTasks; i++ ) {
-           // Task is ready to tick
-           if ( tasks[i]->elapsedTime == tasks[i]->period ) {
-               // Setting next state for task
-               tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
-               // Reset the elapsed time for next tick.
-               tasks[i]->elapsedTime = 0;
-           }
-           tasks[i]->elapsedTime += 1;
-       }
-       while(!TimerFlag);
-       TimerFlag = 0;
-   }
-   // Error: Program should not exit!
-   return 0;
-}
-
 
