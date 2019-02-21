@@ -73,9 +73,9 @@ void Tick(){
 	}
 	switch(button_state){
 		case off1:
-            if( (temp_a & 0x01) && (count_button == 10) ){
+            if( (temp_a & 0x01) && (count_button == 10) && freq ){
                 ++freq;
-            }else if( (temp_a & 0x02 && (count_button == 10)) && (freq > 1) ){
+            }else if(  (temp_a & 0x02) && (count_button == 10) && (freq > 1) ){
                 --freq;
             }
 		    else if(temp_a & 0x04){
@@ -135,7 +135,7 @@ int main(void)
 	leds3_state = zeroToOne;
 	blink_state = off; 
 	combine_state = combine;
-    freq = 2;
+    freq = 10;
     /* Replace with your application code */
 
     while (1) 
