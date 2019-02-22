@@ -9,6 +9,52 @@
 #include <io_alt.c>
 #include <timer.h>
 
+unsigned char stuff[] = "CS120B is Legend... wait for it DARY!";
+
+
+enum State {SCROLL} state;
+void Tick(){
+        static unsigned char scroll = 16;
+        static unsigned char disp = 0;
+        static unsigned long offset_trigger = 0; 
+        static unsigned long offset = 0;
+        static unsigned long character_pos = 0 ;
+        
+        unsigned long mess_length = sizeof(stuff)/sizeof(stuff[0]) ;
+    switch(state){
+        case SCROLL:
+                offset = 0;
+                offset_trigger = 0;
+                scroll = 15;
+                LCD_ClearScreen();
+                LCD_Cursor(16);
+                
+                for(int i = 0; i < (mess_length + 15); ++i){
+                    //LCD_ClearScreen();
+                    for(int j = 16; j > scroll; --j){
+                        if( (character_pos = (j-scroll-1 + offset) ) >= (mess_length - 1) ) disp = 32;
+                        else disp = stuff[character_pos];
+                        
+                        LCD_Cursor(j);
+                        LCD_WriteData(disp);
+                        
+                    }
+                    while(!TimerFlag);
+                    TimerFlag = 0;
+                    
+                    if(scroll) --scroll;
+                    ++offset_trigger;
+                    if(offset_trigger >= 16) {
+                        ++offset;
+                    }                   
+                }
+        default: 
+            state = SCROLL;
+        break;
+    }
+    
+}
+
 int main(void)
 {
     DDRA = 0xFF; PORTC = 0x00;
@@ -22,46 +68,13 @@ int main(void)
       
     //unsigned char stuff[] = "Matthew is Legend... wait for it DARY!";
 
-    unsigned char stuff[] = "CS120B is Legend... wait for it DARY!";
     // Initializes the LCD display
     LCD_init();
     LCD_ClearScreen();
-    //LCD_DisplayString(16, "");  
-   
-    unsigned char scroll = 16; 
-    unsigned char disp = 0; 
-    unsigned long offset_trigger = 0, offset = 0;
-    unsigned long character_pos = 0 ;
-    
-    unsigned long mess_length = sizeof(stuff)/sizeof(stuff[0]) ;
     while (1) 
-    {
-        offset = 0;
-        offset_trigger = 0;
-        scroll = 15;
-        LCD_ClearScreen();
-        LCD_Cursor(16);
-        
-        for(int i = 0; i < (mess_length + 15); ++i){   
-            //LCD_ClearScreen();      
-            for(int j = 16; j > scroll; --j){
-                if( (character_pos = (j-scroll-1 + offset) ) >= (mess_length - 1) ) disp = 32;
-                else disp = stuff[character_pos];
-                                
-                LCD_Cursor(j);
-                LCD_WriteData(disp);                      
-            }          
-            if(scroll) --scroll;
-            ++offset_trigger;
-            if(offset_trigger >= 16) {
-                ++offset;
-                //offset_trigger = 0;
-            }
-            while(!TimerFlag);          
-            TimerFlag = 0;
-            
-        }          
-        
-        
+    {  
+        Tick();
+        while(!TimerFlag);
+        TimerFlag = 0;                
     }
 }
