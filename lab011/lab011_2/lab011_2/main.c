@@ -20,17 +20,20 @@ int Tick(int state){
         static unsigned long offset_trigger = 0; 
         static unsigned long offset = 0;
         static unsigned long character_pos = 0 ;
+        static unsigned long i = 0; 
+        //static unsigned long j = 0;
         
         unsigned long mess_length = sizeof(stuff)/sizeof(stuff[0]) ;
     switch(state){
         case SCROLL:
-                offset = 0;
-                offset_trigger = 0;
-                scroll = 15;
+                
+               // scroll = 15;
                 LCD_ClearScreen();
                 LCD_Cursor(16);
                 
-                for(int i = 0; i < (mess_length + 15); ++i){
+               // for(int i = 0; i < (mess_length + 15); ++i){
+                   if(i < (mess_length + 15)){
+                        ++i;
                     //LCD_ClearScreen();
                     for(int j = 16; j > scroll; --j){
                         if( (character_pos = (j-scroll-1 + offset) ) >= (mess_length - 1) ) disp = 32;
@@ -40,15 +43,19 @@ int Tick(int state){
                         LCD_WriteData(disp);
                         
                     }
-                    while(!TimerFlag);
-                    TimerFlag = 0;
+                    //while(!TimerFlag);
+                    //TimerFlag = 0;
                     
                     if(scroll) --scroll;
                     ++offset_trigger;
                     if(offset_trigger >= 16) {
                         ++offset;
                     }                   
-                }
+                }else {
+                    i = 0; 
+                    scroll = 15;
+                    offset = 0;
+                offset_trigger = 0;}
         default: 
             state = SCROLL;
         break;
@@ -63,7 +70,7 @@ int main(void)
     DDRC = 0xF0; PORTC = 0x0F; // LCD data lines
     DDRD = 0xFF; PORTD = 0x00; // LCD control lines
       
-    unsigned long period = 400;  
+    unsigned long period = 1;  
     TimerSet(400);
     TimerOn();
     TimerFlag = 0;
@@ -93,8 +100,8 @@ int main(void)
             }
             tasks[i]->elapsedTime += 1;
         }
-        //while(!TimerFlag);
-        //TimerFlag = 0;
+        while(!TimerFlag);
+        TimerFlag = 0;
    }
 
     // Error: Program should not exit!
