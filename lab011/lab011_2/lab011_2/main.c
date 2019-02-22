@@ -8,12 +8,13 @@
 #include <avr/io.h>
 #include <io_alt.c>
 #include <timer.h>
+#include <scheduler.h>
 
 unsigned char stuff[] = "CS120B is Legend... wait for it DARY!";
 
 
-enum State {SCROLL} state;
-void Tick(){
+enum State {SCROLL};
+int Tick(int state){
         static unsigned char scroll = 16;
         static unsigned char disp = 0;
         static unsigned long offset_trigger = 0; 
@@ -52,7 +53,7 @@ void Tick(){
             state = SCROLL;
         break;
     }
-    
+    return state;
 }
 
 int main(void)
@@ -62,19 +63,41 @@ int main(void)
     DDRC = 0xF0; PORTC = 0x0F; // LCD data lines
     DDRD = 0xFF; PORTD = 0x00; // LCD control lines
       
+    unsigned long period = 400;  
     TimerSet(400);
     TimerOn();
     TimerFlag = 0;
       
+    static task task0;
+    task0.elapsedTime = period;
+    task0.period = period;
+    task0.state = -1;
+    task0.TickFct = &Tick; 
+    
+    task *tasks[] = {&task0};
     //unsigned char stuff[] = "Matthew is Legend... wait for it DARY!";
-
+    const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
     // Initializes the LCD display
     LCD_init();
     LCD_ClearScreen();
+    int i = 0;
     while (1) 
     {  
-        Tick();
-        while(!TimerFlag);
-        TimerFlag = 0;                
-    }
+        for ( i = 0; i < numTasks; i++ ) {
+            // Task is ready to tick
+            if ( tasks[i]->elapsedTime == tasks[i]->period ) {
+                // Setting next state for task
+                tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
+                // Reset the elapsed time for next tick.
+                tasks[i]->elapsedTime = 0;
+            }
+            tasks[i]->elapsedTime += 1;
+        }
+        //while(!TimerFlag);
+        //TimerFlag = 0;
+   }
+
+    // Error: Program should not exit!
+    return 0;
+              
 }
