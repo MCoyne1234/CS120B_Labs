@@ -20,9 +20,9 @@ int main(void)
     TimerOn();
     TimerFlag = 0;
       
-   unsigned char stuff[] = "Matthew is Legend... wait for it DARY!";
+    //unsigned char stuff[] = "Matthew is Legend... wait for it DARY!";
 
-    //unsigned char stuff[] = "CS120B is Legend... wait for it DARY!";
+    unsigned char stuff[] = "CS120B is Legend... wait for it DARY!";
     // Initializes the LCD display
     LCD_init();
     LCD_ClearScreen();
