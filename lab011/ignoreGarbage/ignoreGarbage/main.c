@@ -11,6 +11,7 @@
 #include <timer.h>
 #include <stdio.h>
 #include <scheduler.h>
+#include <io_alt.c>
 
 
 // Returns '\0' if no key pressed, else returns char '1', '2', ... '9', 'A', ...
@@ -74,16 +75,34 @@ void KeypadTick(){
 
 int main(void)
 {
-    DDRA = 0x00; PORTA = 0x00;
+    DDRA = 0xFF; PORTA = 0x00;
     DDRB = 0xFF; PORTB = 0x00;
     DDRC = 0xF0; PORTC = 0x0F; // PORTB set to output, outputs init 0s
     DDRD = 0xFF; PORTD = 0x00; // PC7..4 outputs init 0s, PC3..0 inputs init 1s
-    unsigned long keypad_time = 10;
+    //unsigned long keypad_time = 10;
     
-    TimerSet(5);
+    TimerSet(2000);
     TimerOn();
     TimerFlag = 0;
-    unsigned char x;
+    unsigned char x = 0;
+    
+    LCD_init();
+    //LCD_DisplayString(1,"HIDY-HO");
+    LCD_Cursor(10);
+    LCD_WriteData('H');
+        
+    while(1) {
+        if(x) {
+            x = ~x;
+            LCD_Cursor(5);
+        }else{
+        x = ~x;
+        LCD_Cursor(21);
+        }
+        while(!TimerFlag);
+        TimerFlag = 0;
+    }
+ /*   
     while(1) {
             
             x = GetKeypadKey();
@@ -110,5 +129,7 @@ int main(void)
             while(!TimerFlag){};
                 TimerFlag = 0;
         }
+*/
+        return 0;
 }
 
