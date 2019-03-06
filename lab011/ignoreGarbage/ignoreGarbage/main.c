@@ -14,59 +14,13 @@
 #include <io_alt.c>
 
 
-// Returns '\0' if no key pressed, else returns char '1', '2', ... '9', 'A', ...
-// If multiple keys pressed, returns leftmost-topmost one
-// Keypad must be connected to port C
-/* Keypad arrangement
-        PC4 PC5 PC6 PC7
-   col  1   2   3   4
-row
-PC0 1   1 | 2 | 3 | A
-PC1 2   4 | 5 | 6 | B
-PC2 3   7 | 8 | 9 | C
-PC3 4   * | 0 | # | D
-*/
-unsigned char GetKeypadKey() {
-
-    PORTC = 0xEF; // Enable col 4 with 0, disable others with 1’s
-    asm("nop"); // add a delay to allow PORTC to stabilize before checking
-    if (GetBit(PINC,0)==0) { return('1'); }
-    if (GetBit(PINC,1)==0) { return('4'); }
-    if (GetBit(PINC,2)==0) { return('7'); }
-    if (GetBit(PINC,3)==0) { return('*'); }
-
-    // Check keys in col 2
-    PORTC = 0xDF; // Enable col 5 with 0, disable others with 1’s
-    asm("nop"); // add a delay to allow PORTC to stabilize before checking
-    if (GetBit(PINC,0)==0) { return('2'); }
-    if (GetBit(PINC,1)==0) { return('5'); }
-    if (GetBit(PINC,2)==0) { return('8'); }
-    if (GetBit(PINC,3)==0) { return('0'); }
-    // ... *****FINISH*****
-
-    // Check keys in col 3
-    PORTC = 0xBF; // Enable col 6 with 0, disable others with 1’s
-    asm("nop"); // add a delay to allow PORTC to stabilize before checking
-    // ... *****FINISH*****
-    if (GetBit(PINC,0)==0) { return('3'); }
-    if (GetBit(PINC,1)==0) { return('6'); }
-    if (GetBit(PINC,2)==0) { return('9'); }
-    if (GetBit(PINC,3)==0) { return('#'); }
-
-    // Check keys in col 4    
-    // ... *****FINISH*****
-    PORTC = 0x7F; // Enable col 6 with 0, disable others with 1’s
-    asm("nop"); // add a delay to allow PORTC to stabilize before checking
-    // ... *****FINISH*****
-    if (GetBit(PINC,0)==0) { return('A'); }
-    if (GetBit(PINC,1)==0) { return('B'); }
-    if (GetBit(PINC,2)==0) { return('C'); }
-    if (GetBit(PINC,3)==0) { return('D'); }
-
-    return('\0'); // default value
-
+void LCD_Custom_Char (unsigned char loc, unsigned char *msg){
+    int i;
+    LCD_WriteCommand (0x40 + (loc*8));	/* Command 0x40 for CGRAM */
+    for(i = 0;i < 8; i++)	/* 8 cause 8 lines x 5 rows per character */
+    LCD_WriteData(msg[i]);
+    LCD_WriteCommand(0x80);
 }
-
 
 void KeypadTick(){
 
@@ -84,52 +38,44 @@ int main(void)
     TimerSet(2000);
     TimerOn();
     TimerFlag = 0;
-    unsigned char x = 0;
     
     LCD_init();
     //LCD_DisplayString(1,"HIDY-HO");
-    LCD_Cursor(10);
-    LCD_WriteData('H');
+
+    // TOP right to bottom left. Only 5 bits per entry used => 5x8 pixels. 
+	unsigned char sel3[8] = {0x1C, 0x1F, 0x1F, 0x1C, 0x00, 0x00, 0x00, 0x00};
+	unsigned char sel0[8] = {0x00, 0x00, 0x00, 0x00, 0x1C, 0x1F, 0x1F, 0x1C};
+	unsigned char selS[8] = {0x00, 0x1C, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00};
+	unsigned char selE[8] = {0x00, 0x07, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00};
+	unsigned char selC[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x1C, 0x00};
+    unsigned char selX[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x07, 0x00};
+	
+	LCD_Custom_Char(0, sel3);		// build at position 0...
+	LCD_Custom_Char(1, sel0);
+	LCD_Custom_Char(2, selS);
+	LCD_Custom_Char(3, selE);
+	LCD_Custom_Char(4, selC);
+    LCD_Custom_Char(5, selX);
+    
+    LCD_Cursor(1);
+    LCD_WriteData(0);
+    LCD_Cursor(3);
+    LCD_WriteData(1);
+    LCD_Cursor(5);
+    LCD_WriteData(2);
+    LCD_Cursor(7);
+    LCD_WriteData(3);
+    LCD_Cursor(9);
+    LCD_WriteData(4);
+    LCD_Cursor(11);
+    LCD_WriteData(5);
+    LCD_Cursor(13);
+    LCD_WriteData(9);
         
     while(1) {
-        if(x) {
-            x = ~x;
-            LCD_Cursor(5);
-        }else{
-        x = ~x;
-        LCD_Cursor(21);
-        }
         while(!TimerFlag);
         TimerFlag = 0;
     }
- /*   
-    while(1) {
-            
-            x = GetKeypadKey();
-            switch (x) {
-                case '\0': PORTB = 0x1F; break; // All 5 LEDs on
-                case '1': PORTB = 0x01; break; // hex equivalent
-                case '2': PORTB = 0x02; break;
-                case '3': PORTB = 0x03; break;
-                case '4': PORTB = 0x04; break;
-                case '5': PORTB = 0x05; break;
-                case '6': PORTB = 0x06; break;
-                case '7': PORTB = 0x07; break;
-                case '8': PORTB = 0x08; break;
-                case '9': PORTB = 0x09; break;
-                case 'A': PORTB = 0x0A; break;
-                case 'B': PORTB = 0x0B; break;
-                case 'C': PORTB = 0x0C; break;
-                case 'D': PORTB = 0x0D; break;
-                case '*': PORTB = 0x0E; break;
-                case '0': PORTB = 0x00; break;
-                case '#': PORTB = 0x0F; break;
-                default: PORTB = 0x1B; break; // Should never occur. Middle LED off.
-            }
-            while(!TimerFlag){};
-                TimerFlag = 0;
-        }
-*/
         return 0;
 }
 
