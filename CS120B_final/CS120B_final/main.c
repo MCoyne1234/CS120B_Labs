@@ -7,11 +7,14 @@
 
 #include <avr/io.h>
 #include <avr/eeprom.h>
+#include <string.h>
 
 #include "SNES.c"
 #include "io.c"
 #include "scheduler.h"
 #include "timer.h"
+
+#define HIGH_SCORE_ADDR 0
 
 enum StatesSNES {SNES_LISTEN};
 enum StatesGame{GAME_BEGIN, GAME_PLAY, GAME_OVER};
@@ -19,9 +22,17 @@ enum StatesGame{GAME_BEGIN, GAME_PLAY, GAME_OVER};
 // Vars shared between tasks.    
 unsigned short SNES_button;
 unsigned char tank_pos, fire_b;
+
 unsigned char projectile[2];
 unsigned char proj_pos;
 unsigned char proj_flip;
+
+unsigned char giant[2];
+unsigned char giant_on;
+unsigned char game_over_flag;
+unsigned char score;
+
+unsigned char limiter, counter;
 
 // Forward declarations. 
 int SNESInput(int state); 
@@ -30,9 +41,12 @@ void CreatePremadeChars();
 void ProcessInput();
 void MoveTank();
 void FireProjectile();
+void MoveGiant();
 
 int main(void)
 {
+    eeprom_write_byte((uint8_t)0, 0);
+    
     DDRA = 0x03; PORTA = 0x00; // input for SNES controller
     DDRB = 0xFF; PORTB = 0x00; // LCD output
     DDRC = 0xFF; PORTC = 0x00; // LCD output
@@ -113,13 +127,25 @@ int Game(int state){
     switch(state){
         static unsigned char begin = 0x00; 
         case GAME_BEGIN: 
+            score = 0;
             tank_pos = 0;
             proj_pos = 0;
             proj_flip = 0;
             fire_b = 0;
+            game_over_flag = 0;
+            giant_on = 0;
+            limiter = 10;
+            counter = 0;
             
             if(!begin){
-                LCD_DisplayString(1,"Press Start..."); // write to LCD only once on entry.
+                char message[32];
+                unsigned char high_score= eeprom_read_byte(0);
+                char high_score_string[4];
+                itoa((int)high_score,*high_score_string, 10);
+                
+                strcpy(message, "Press Start...  HIGH SCORE: ");
+                strcat(message, high_score_string);
+                LCD_DisplayString(1,message); // write to LCD only once on entry.
                 begin = ~begin;
             }
             if((SNES_button & 4096) == 4096){
@@ -128,13 +154,22 @@ int Game(int state){
             }
         break;
         case GAME_PLAY:
-        MoveTank();
-        
+        MoveTank();    
         if(fire_b & 0x0F){ FireProjectile();}
+        MoveGiant();
+        
+        if(game_over_flag){ state = GAME_OVER;}
         
         break;  
         case GAME_OVER:
-        
+            if(begin){
+                LCD_ClearScreen();
+                LCD_DisplayString(4, "GAME OVER");
+                begin = 0x00;
+            }                
+            if((SNES_button & 4096) == 4096){
+                state = GAME_BEGIN;
+            }
         break;
         default: 
             state = GAME_BEGIN;
@@ -158,6 +193,8 @@ void CreatePremadeChars(){
     unsigned char shot_TF[8] = {0x00, 0x07, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00};
     unsigned char shot_BB[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x1C, 0x00};
     unsigned char shot_BF[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x07, 0x00};
+    unsigned char giant_T[8] = {0x1A, 0x0F, 0x0F, 0x1A, 0x00, 0x00, 0x00, 0x00};
+    unsigned char giant_B[8] = {0x00, 0x00, 0x00, 0x00, 0x1A, 0x0F, 0x0F, 0x1A};
         
     LCD_Custom_Char(0, tank_T);
     LCD_Custom_Char(1, tank_B);
@@ -165,11 +202,13 @@ void CreatePremadeChars(){
     LCD_Custom_Char(3, shot_TF);
     LCD_Custom_Char(4, shot_BB);
     LCD_Custom_Char(5, shot_BF);
+    LCD_Custom_Char(6, giant_T);
+    LCD_Custom_Char(7, giant_B);
 }
 
 void ProcessInput(){
+    // set all the shared vars according to SNES buttons pressed
     if(SNES_button){
-        PORTD = 0xFF;
         if((SNES_button & 16) == 16); //output += "R";
         if((SNES_button & 32) == 32);//output += "L";
         if((SNES_button & 64) == 64); //output += "X";
@@ -188,6 +227,7 @@ void ProcessInput(){
         if((SNES_button & 8192) == 8192); //output += "Select";
         if((SNES_button & 16384) == 16384); //output += "Y";
         if((SNES_button & 32768) == 32768){ //output += "B";
+            //only fire one projectile at a time. FireProjectile() resets the flag.  
             if ( !(fire_b & 0x0F) ){ 
                 projectile[0] = tank_pos; 
                 if(tank_pos == 0){
@@ -208,8 +248,9 @@ void ProcessInput(){
    return; 
 }
 
-
 void MoveTank(){
+    
+    //Move the tank by half a character each time.
     if(tank_pos == 0){
         LCD_Cursor(1);
         LCD_WriteData(32);
@@ -236,6 +277,7 @@ void MoveTank(){
 
 void FireProjectile(){
     
+    // making a note to get rid of this 
     if(projectile[0] == 0){
         LCD_Cursor(projectile[1]);
     }else if(projectile[0] == 1){
@@ -278,4 +320,52 @@ void FireProjectile(){
         }
         }        
         proj_flip = ~proj_flip;    
+}
+
+void MoveGiant(){
+    unsigned short rand_n = rand();
+       
+    if(!giant_on){
+        giant_on = 0xFF;
+        if(rand_n <= 0x00FF){
+            giant[0] = 0;
+            giant[1] = 16;
+        }else{ 
+            giant[0] = 2;
+            giant[1] = 32;
+        }        
+    }else{
+     if(counter > limiter){   
+        LCD_Cursor(giant[1]);
+        LCD_WriteData(32);
+                
+        if(rand_n <= 0x000F){
+            if(giant[0] < 3){++(giant[0]);}
+        }else if(rand_n <= 0x00FF){
+            if(giant[0] > 0){--(giant[0]);}
+        }else {
+            --(giant[1]);
+        }
+     counter = 0;  
+     }else ++counter; 
+    }
+    
+    LCD_Cursor(giant[1]);
+    if((giant[0] == 0) || (giant[0] == 2)){
+        LCD_WriteData(6);
+    }else if((giant[0] == 1) || (giant[0] == 3)){
+        LCD_WriteData(7);
+    }
+    
+    if((giant[1] == 1) || (giant[1] == 16)) {game_over_flag = 0xFF;}
+    
+    if( (projectile[0] == giant[0]) && (projectile[1] == giant[1]) ){
+        ++score;
+        if(limiter > 0 ) --limiter;
+        LCD_Cursor(giant[1]);
+        LCD_WriteData('#');
+        //LCD_WriteData(32);
+        giant_on = 0x00;
+    }  
+    
 }
