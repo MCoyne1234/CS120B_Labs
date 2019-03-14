@@ -16,14 +16,20 @@
 enum StatesSNES {SNES_LISTEN};
 enum StatesGame{GAME_BEGIN, GAME_PLAY, GAME_OVER};
     
-// States shared between tasks.    
+// Vars shared between tasks.    
 unsigned short SNES_button;
 unsigned char tank_pos, fire_b;
+unsigned char projectile[2];
+unsigned char proj_pos;
+unsigned char proj_flip;
 
 // Forward declarations. 
 int SNESInput(int state); 
 int Game(int state);    
 void CreatePremadeChars();
+void ProcessInput();
+void MoveTank();
+void FireProjectile();
 
 int main(void)
 {
@@ -36,8 +42,8 @@ int main(void)
     task *tasks[] =  {&task_SNES, &task_game};    
     const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
     
-    unsigned long period_SNES = 80;
-    unsigned long period_game = 80; 
+    unsigned long period_SNES = 100;
+    unsigned long period_game = 100; 
     
     task_SNES.state = -1;
     task_SNES.period = period_SNES; //should get input every system tick.
@@ -90,33 +96,10 @@ int main(void)
 
 int SNESInput(int state){
     switch(state){
+        //fire_b = 0x00;
         case SNES_LISTEN:
             SNES_button = SNES_Read();
-            ///*
-                    //if((button & 1) == 1) output |= 0x0A;
-                    //if((button & 2) == 2) output |= 0xA0;
-                    //if((button & 4) == 4) output |= 0xAA;
-                    //if((button & 8) == 8) output |= 0xFF;
-           ///*
-            if(SNES_button){
-                if((SNES_button & 16) == 16); //output += "R";
-                if((SNES_button & 32) == 32);//output += "L";
-                if((SNES_button & 64) == 64); //output += "X";
-                if((SNES_button & 128) == 128); //output += "A";
-                if((SNES_button & 256) == 256){  //output += "Right";
-                    if(tank_pos > 0 ) --tank_pos;
-                } 
-                if((SNES_button & 512) == 512){  //output += "Left";
-                    if(tank_pos < 3) ++tank_pos;
-                } 
-                if((SNES_button & 1024) == 1024); //output += "Up";
-                if((SNES_button & 2048) == 2048); //output += "Down";
-                if((SNES_button & 4096) == 4096); //output += "Start";
-                if((SNES_button & 8192) == 8192); //output += "Select";
-                if((SNES_button & 16384) == 16384); //output += "Y";
-                if((SNES_button & 32768) == 32768); //output += "B";
-            }else SNES_button = 0;
-          //  */
+            ProcessInput();
         break;
         default:
             state = SNES_LISTEN;
@@ -126,47 +109,28 @@ int SNESInput(int state){
 };
 
 int Game(int state){
+    
     switch(state){
         static unsigned char begin = 0x00; 
         case GAME_BEGIN: 
             tank_pos = 0;
+            proj_pos = 0;
+            proj_flip = 0;
+            fire_b = 0;
+            
             if(!begin){
-                //LCD_Cursor(3);
-                //LCD_ClearScreen();
-                //LCD_Cursor(0);
-                LCD_DisplayString(1,"Press Start...");
+                LCD_DisplayString(1,"Press Start..."); // write to LCD only once on entry.
                 begin = ~begin;
             }
             if((SNES_button & 4096) == 4096){
-            //if((SNES_button)){
                 state = GAME_PLAY;
                 LCD_ClearScreen();
             }
-
-            // convert 123 to string [buf]
-           // itoa(num, snum, 10);
-           // LCD_DisplayString(1,snum);
-          //  _delay_ms(30000);
         break;
         case GAME_PLAY:
+        MoveTank();
         
-            if(tank_pos == 0){
-                LCD_Cursor(1);
-                LCD_WriteData(0);
-            }else if(tank_pos == 1){
-                LCD_Cursor(17);
-                LCD_WriteData(32);
-                LCD_Cursor(1);
-                LCD_WriteData(1);
-            }else if(tank_pos == 2){
-                LCD_Cursor(1);
-                LCD_WriteData(32);
-                LCD_Cursor(17);
-                LCD_WriteData(0);
-            }else if(tank_pos == 3){
-                LCD_Cursor(17);
-                LCD_WriteData(1);
-            }    
+        if(fire_b & 0x0F){ FireProjectile();}
         
         break;  
         case GAME_OVER:
@@ -190,13 +154,128 @@ void LCD_Custom_Char (unsigned char loc, unsigned char *msg){
 void CreatePremadeChars(){
     unsigned char tank_T[8] = {0x1C, 0x1F, 0x1F, 0x1C, 0x00, 0x00, 0x00, 0x00};
     unsigned char tank_B[8] = {0x00, 0x00, 0x00, 0x00, 0x1C, 0x1F, 0x1F, 0x1C};
-    unsigned char thing_TB[8] = {0x00, 0x1C, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00};
-    unsigned char thing_TF[8] = {0x00, 0x07, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00};
-    unsigned char selC[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x1C, 0x00};
-    unsigned char selX[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x07, 0x00};
+    unsigned char shot_TB[8] = {0x00, 0x1C, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00};
+    unsigned char shot_TF[8] = {0x00, 0x07, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00};
+    unsigned char shot_BB[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x1C, 0x00};
+    unsigned char shot_BF[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x07, 0x00};
         
     LCD_Custom_Char(0, tank_T);
     LCD_Custom_Char(1, tank_B);
-    LCD_Custom_Char(2, thing_TB);
-    LCD_Custom_Char(3, thing_TF);
+    LCD_Custom_Char(2, shot_TB);
+    LCD_Custom_Char(3, shot_TF);
+    LCD_Custom_Char(4, shot_BB);
+    LCD_Custom_Char(5, shot_BF);
+}
+
+void ProcessInput(){
+    if(SNES_button){
+        PORTD = 0xFF;
+        if((SNES_button & 16) == 16); //output += "R";
+        if((SNES_button & 32) == 32);//output += "L";
+        if((SNES_button & 64) == 64); //output += "X";
+        if((SNES_button & 128) == 128); //output += "A";
+        if((SNES_button & 256) == 256){  //output += "Right"; 
+        } 
+        if((SNES_button & 512) == 512){  //output += "Left";                  
+        } 
+        if((SNES_button & 1024) == 1024){ //output += "Up";
+            if(tank_pos < 3) ++tank_pos;
+        }                    
+        if((SNES_button & 2048) == 2048){ //output += "Down";
+            if(tank_pos > 0 ) --tank_pos;     
+        }                
+        if((SNES_button & 4096) == 4096); //output += "Start";
+        if((SNES_button & 8192) == 8192); //output += "Select";
+        if((SNES_button & 16384) == 16384); //output += "Y";
+        if((SNES_button & 32768) == 32768){ //output += "B";
+            if ( !(fire_b & 0x0F) ){ 
+                projectile[0] = tank_pos; 
+                if(tank_pos == 0){
+                    projectile[1] = 1; 
+                }else if(tank_pos == 1){
+                    projectile[1] = 1;
+                }else if(tank_pos == 2){
+                    projectile[1] = 17;
+                }else if(tank_pos == 3){
+                    projectile[1] = 17;
+                }
+            }                    
+            fire_b = 0x0F;                    
+        }                    
+    }else {SNES_button = 0;
+    PORTC = 0x00;}
+   
+   return; 
+}
+
+
+void MoveTank(){
+    if(tank_pos == 0){
+        LCD_Cursor(1);
+        LCD_WriteData(32);
+        LCD_Cursor(1);        
+        LCD_WriteData(0);
+    }else if(tank_pos == 1){
+        LCD_Cursor(17);
+        LCD_WriteData(32);
+        LCD_Cursor(1);
+        LCD_WriteData(1);
+    }else if(tank_pos == 2){
+        LCD_Cursor(1);
+        LCD_WriteData(32);
+        LCD_Cursor(17);
+        LCD_WriteData(0);
+    }else if(tank_pos == 3){
+        LCD_Cursor(17);         
+        LCD_WriteData(32);      
+        LCD_Cursor(17);
+        LCD_WriteData(1);
+    }
+    return;
+}
+
+void FireProjectile(){
+    
+    if(projectile[0] == 0){
+        LCD_Cursor(projectile[1]);
+    }else if(projectile[0] == 1){
+        LCD_Cursor(projectile[1]);
+    }else if(projectile[0] == 2){
+        LCD_Cursor(projectile[1]);
+    }else if(projectile[0] == 3){
+        LCD_Cursor(projectile[1]);
+    }
+    
+ 
+    if(proj_pos > 15){
+        LCD_Cursor(16);
+        LCD_WriteData(32);
+        LCD_Cursor(32);
+        LCD_WriteData(32);        
+        proj_pos = 0;
+        fire_b = 0;
+    }else {        
+        LCD_Cursor(projectile[1] - 1);
+        LCD_WriteData(32); 
+        ++(projectile[1]);
+        ++proj_pos;
+        }
+        
+        if (proj_pos > 1)
+        {
+        
+        if( (projectile[0] == 0) || (projectile[0] == 2) ){
+            if(proj_flip){
+                LCD_WriteData(2);
+                }else{
+                LCD_WriteData(3);
+            }
+        }else
+            if(proj_flip){
+                LCD_WriteData(4);
+            }else{
+                LCD_WriteData(5);
+        }
+        }        
+        proj_flip = ~proj_flip;    
 }
