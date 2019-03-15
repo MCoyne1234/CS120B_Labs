@@ -17,11 +17,14 @@
 #define HIGH_SCORE_ADDR 0
 
 enum StatesSNES {SNES_LISTEN};
-enum StatesGame{GAME_BEGIN, GAME_PLAY, GAME_OVER};
+enum StatesGame{GAME_BEGIN, GAME_PLAY, GAME_OVER, GAME_PAUSE};
+enum StatesSense{SENSE};
     
 // Vars shared between tasks.    
 unsigned short SNES_button;
+unsigned char tilt, tilt_count;
 unsigned char tank_pos, fire_b;
+
 
 unsigned char projectile[2];
 unsigned char proj_pos;
@@ -30,34 +33,39 @@ unsigned char proj_flip;
 unsigned char giant[2];
 unsigned char giant_on;
 unsigned char game_over_flag;
-unsigned char score;
+int score;
 
 unsigned char limiter, counter;
+unsigned char is_present, pause;
+unsigned short presence_counter;
+unsigned short gone_counter;
 
 // Forward declarations. 
 int SNESInput(int state); 
 int Game(int state);    
+int SensePlayer(int state);
 void CreatePremadeChars();
 void ProcessInput();
 void MoveTank();
 void FireProjectile();
 void MoveGiant();
 
+
 int main(void)
 {
-    eeprom_write_byte((uint8_t)0, 0);
     
     DDRA = 0x03; PORTA = 0x00; // input for SNES controller
-    DDRB = 0xFF; PORTB = 0x00; // LCD output
+    DDRB = 0xFD; PORTB = 0x00; // output
     DDRC = 0xFF; PORTC = 0x00; // LCD output
-    DDRD = 0xFF; PORTD = 0x00; // LCD output
+    DDRD = 0xC0; PORTD = 0x00; // LCD output
     
-    static task task_SNES, task_game;
-    task *tasks[] =  {&task_SNES, &task_game};    
+    static task task_SNES, task_game, task_sense;
+    task *tasks[] =  {&task_SNES, &task_game, &task_sense};    
     const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
     
     unsigned long period_SNES = 100;
     unsigned long period_game = 100; 
+    unsigned long period_sense = 5;
     
     task_SNES.state = -1;
     task_SNES.period = period_SNES; //should get input every system tick.
@@ -69,6 +77,11 @@ int main(void)
     task_game.elapsedTime = period_game;
     task_game.TickFct = &Game;
     
+     task_sense.state = -1;
+     task_sense.period = period_sense; //should get input every system tick.
+     task_sense.elapsedTime = period_sense;
+     task_sense.TickFct = &SensePlayer;
+    
 
     TimerSet(1);
     TimerOn();
@@ -79,14 +92,8 @@ int main(void)
     
     CreatePremadeChars();
     LCD_ClearScreen();    
-    //LCD_Cursor(1);
-    //LCD_WriteData(0);
-    //LCD_WriteData(1);
-    //LCD_WriteData(2);
-    //LCD_WriteData(3);
-    //LCD_DisplayString(1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!");
-    //
     SNES_init();
+
     unsigned short i = 0; // Scheduler for-loop iterator
     while(1){
         // Scheduler code
@@ -102,6 +109,7 @@ int main(void)
         }
         while(!TimerFlag);
         TimerFlag = 0;
+       
     }
     // Error: Program should not exit!
     return 0;
@@ -136,15 +144,20 @@ int Game(int state){
             giant_on = 0;
             limiter = 10;
             counter = 0;
+            giant[0] = 33;
+            giant[1] = 33;
+            tilt_count = 0;
+            pause = 0;
+            presence_counter = 1000;
             
             if(!begin){
                 char message[32];
-                unsigned char high_score= eeprom_read_byte(0);
+               unsigned char high_score = eeprom_read_byte((uint8_t*)16);
                 char high_score_string[4];
-                itoa((int)high_score,*high_score_string, 10);
-                
-                strcpy(message, "Press Start...  HIGH SCORE: ");
+                sprintf(high_score_string, "%d", high_score);
+                strcpy(message, "Press Start...  H_SCORE ");
                 strcat(message, high_score_string);
+                
                 LCD_DisplayString(1,message); // write to LCD only once on entry.
                 begin = ~begin;
             }
@@ -158,22 +171,67 @@ int Game(int state){
         if(fire_b & 0x0F){ FireProjectile();}
         MoveGiant();
         
+        
         if(game_over_flag){ state = GAME_OVER;}
+        else if(pause) {
+            state = GAME_PAUSE;
+                LCD_ClearScreen();
+                LCD_DisplayString(6, "PAUSE");
+            }
         
         break;  
         case GAME_OVER:
             if(begin){
                 LCD_ClearScreen();
-                LCD_DisplayString(4, "GAME OVER");
+                if(tilt_count > 4){LCD_DisplayString(4, "GAME OVER        TILT!");}
+                else{LCD_DisplayString(4, "GAME OVER");}                
                 begin = 0x00;
+               
+               unsigned char high_score = eeprom_read_byte((uint8_t*)16); 
+               if(high_score < score) eeprom_write_byte((uint8_t*) 16, (uint8_t)score);
+
             }                
             if((SNES_button & 4096) == 4096){
                 state = GAME_BEGIN;
             }
         break;
+        case GAME_PAUSE:
+            if(!pause){ 
+                state = GAME_PLAY;
+                LCD_ClearScreen();
+                }
+        break;
         default: 
             state = GAME_BEGIN;
         break;      
+    }
+    return state;
+}
+
+int SensePlayer(int state){
+    
+    switch(state){
+        case SENSE:
+            PORTB = (PORTB | 0x01);
+            _delay_us(10);
+            PORTB = (PORTB & 0xFE);
+            _delay_ms(3);
+            if( (~PINB & 0x02) ){
+                PORTB = (PORTB & 0x00);
+                if(presence_counter < 1000){ ++presence_counter;}
+                if(gone_counter > 0) {--gone_counter;}                             
+            }else {                 
+                PORTB = (PORTB | 0x04);            
+                if(gone_counter < 300) {gone_counter += 3;}
+                if(presence_counter > 3) {presence_counter -= 3;}     
+            };                  
+           // if(gone_counter >= 290){ pause = 0xFF;}
+            if(presence_counter >= 400){
+                pause = 0x00;
+            }else pause = 0xFF;            
+        break;
+        default: state = SENSE;
+        break;
     }
     return state;
 }
@@ -249,7 +307,9 @@ void ProcessInput(){
 }
 
 void MoveTank(){
-    
+    if((PIND & 0x10)){
+            tilt = 0xFF;
+    }
     //Move the tank by half a character each time.
     if(tank_pos == 0){
         LCD_Cursor(1);
@@ -276,7 +336,9 @@ void MoveTank(){
 }
 
 void FireProjectile(){
-    
+    if((PIND & 0x10)){
+        tilt = 0xFF;
+    }
     // making a note to get rid of this 
     if(projectile[0] == 0){
         LCD_Cursor(projectile[1]);
@@ -323,28 +385,54 @@ void FireProjectile(){
 }
 
 void MoveGiant(){
-    unsigned short rand_n = rand();
-       
+    //srand(time(0));
+    short rand_n = rand();
+    if((PIND & 0x10)){
+        tilt = 0xFF;
+    }
+    
     if(!giant_on){
         giant_on = 0xFF;
         if(rand_n <= 0x00FF){
             giant[0] = 0;
             giant[1] = 16;
         }else{ 
-            giant[0] = 2;
+            giant[0] = 3;
             giant[1] = 32;
         }        
     }else{
+        
+            if( (projectile[0] == giant[0]) && (projectile[1] == giant[1]) ){
+                ++score;
+                if(limiter > 0 ) --limiter;
+                LCD_Cursor(giant[1]);
+                LCD_WriteData('#');
+                //LCD_WriteData(32);
+                giant_on = 0x00;
+            }
+        
      if(counter > limiter){   
         LCD_Cursor(giant[1]);
         LCD_WriteData(32);
-                
-        if(rand_n <= 0x000F){
-            if(giant[0] < 3){++(giant[0]);}
-        }else if(rand_n <= 0x00FF){
-            if(giant[0] > 0){--(giant[0]);}
-        }else {
-            --(giant[1]);
+        if( !tilt ){ 
+    
+            if(rand_n <= 0x003F){
+                if(giant[0] < 3){
+                    if(giant[0]==1){ (giant[1]) += 16; }
+                    ++(giant[0]);
+                    }
+            }else if(rand_n <= 0x0FFF){
+                if(giant[0]==2){ (giant[1]) -= 16; }
+                if(giant[0] > 0){--(giant[0]);}
+            }else {
+                --(giant[1]);
+            }        
+        }else { 
+            if( (giant[1]>=2) && (giant[1] < 11) ){ (giant[1]) += 5; }
+            else if( (giant[1]>=18) && (giant[1] < 27) ){ (giant[1]) += 5; }
+            tilt = 0x00;
+            ++tilt_count;
+            if(tilt_count > 4) game_over_flag = 0xFF;
         }
      counter = 0;  
      }else ++counter; 
@@ -359,13 +447,5 @@ void MoveGiant(){
     
     if((giant[1] == 1) || (giant[1] == 16)) {game_over_flag = 0xFF;}
     
-    if( (projectile[0] == giant[0]) && (projectile[1] == giant[1]) ){
-        ++score;
-        if(limiter > 0 ) --limiter;
-        LCD_Cursor(giant[1]);
-        LCD_WriteData('#');
-        //LCD_WriteData(32);
-        giant_on = 0x00;
-    }  
     
 }
