@@ -23,7 +23,7 @@ enum StatesSense{SENSE};
 // Vars shared between tasks.    
 unsigned short SNES_button;
 unsigned char tilt, tilt_count;
-unsigned char tank_pos, fire_b;
+unsigned char tank_pos, fire_b, g_state;
 
 
 unsigned char projectile[2];
@@ -53,6 +53,7 @@ void MoveGiant();
 
 int main(void)
 {
+    eeprom_write_byte((uint8_t*) 16, (uint8_t)0);
     
     DDRA = 0x03; PORTA = 0x00; // input for SNES controller
     DDRB = 0xFD; PORTB = 0x00; // output
@@ -135,30 +136,31 @@ int Game(int state){
     switch(state){
         static unsigned char begin = 0x00; 
         case GAME_BEGIN: 
-            score = 0;
-            tank_pos = 0;
-            proj_pos = 0;
-            proj_flip = 0;
-            fire_b = 0;
-            game_over_flag = 0;
-            giant_on = 0;
-            limiter = 10;
-            counter = 0;
-            giant[0] = 33;
-            giant[1] = 33;
-            tilt_count = 0;
-            pause = 0;
-            presence_counter = 1000;
+           if(!begin){// write only once on entry. 
+                score = 0;
+                tank_pos = 0;
+                proj_pos = 0;
+                proj_flip = 0;
+                fire_b = 0;
+                game_over_flag = 0;
+                giant_on = 0;
+                limiter = 10;
+                counter = 0;
+                giant[0] = 33;
+                giant[1] = 33;
+                tilt_count = 0;
+                pause = 0;
+                presence_counter = 1000;      
+                g_state = 0x00;    
             
-            if(!begin){
-                char message[32];
-               unsigned char high_score = eeprom_read_byte((uint8_t*)16);
+                char message[33];
+                unsigned char high_score = eeprom_read_byte((uint8_t*)16);
                 char high_score_string[4];
                 sprintf(high_score_string, "%d", high_score);
                 strcpy(message, "Press Start...  H_SCORE ");
                 strcat(message, high_score_string);
                 
-                LCD_DisplayString(1,message); // write to LCD only once on entry.
+                LCD_DisplayString(1,message); 
                 begin = ~begin;
             }
             if((SNES_button & 4096) == 4096){
@@ -167,20 +169,24 @@ int Game(int state){
             }
         break;
         case GAME_PLAY:
+        g_state = 0xFF;  
         MoveTank();    
         if(fire_b & 0x0F){ FireProjectile();}
         MoveGiant();
         
         
-        if(game_over_flag){ state = GAME_OVER;}
-        else if(pause) {
+        if(game_over_flag){ 
+            state = GAME_OVER; 
+            g_state = 0x00; 
+        }else if(pause) {
             state = GAME_PAUSE;
                 LCD_ClearScreen();
                 LCD_DisplayString(6, "PAUSE");
-            }
+        }
         
         break;  
         case GAME_OVER:
+        g_state = 0x00;  
             if(begin){
                 LCD_ClearScreen();
                 if(tilt_count > 4){LCD_DisplayString(4, "GAME OVER        TILT!");}
@@ -193,6 +199,8 @@ int Game(int state){
             }                
             if((SNES_button & 4096) == 4096){
                 state = GAME_BEGIN;
+                SNES_button = 0x00;
+                _delay_ms(100);
             }
         break;
         case GAME_PAUSE:
@@ -212,23 +220,22 @@ int SensePlayer(int state){
     
     switch(state){
         case SENSE:
-            PORTB = (PORTB | 0x01);
-            _delay_us(10);
-            PORTB = (PORTB & 0xFE);
-            _delay_ms(3);
-            if( (~PINB & 0x02) ){
-                PORTB = (PORTB & 0x00);
-                if(presence_counter < 1000){ ++presence_counter;}
-                if(gone_counter > 0) {--gone_counter;}                             
-            }else {                 
-                PORTB = (PORTB | 0x04);            
-                if(gone_counter < 300) {gone_counter += 3;}
-                if(presence_counter > 3) {presence_counter -= 3;}     
-            };                  
-           // if(gone_counter >= 290){ pause = 0xFF;}
-            if(presence_counter >= 400){
-                pause = 0x00;
-            }else pause = 0xFF;            
+            if(g_state){
+                PORTB = (PORTB | 0x01);
+                _delay_us(10);
+                PORTB = 0x00;//(PORTB & 0xFE);
+                _delay_ms(1);
+                if( (~PINB & 0x02) ){
+                    PORTB = (PORTB & 0x00);
+                    if(presence_counter < 1000){ ++presence_counter;}
+                }else {                 
+                    PORTB = (PORTB | 0x04);            
+                    if(presence_counter >= 5) { presence_counter -= 2;}     
+                };                  
+                if(presence_counter >= 500){
+                    pause = 0x00;
+                }else pause = 0xFF; 
+            }                       
         break;
         default: state = SENSE;
         break;
